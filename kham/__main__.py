@@ -5,7 +5,7 @@ import sys
 import time
 
 from . import __version__
-from .finder import MATCH_MODES, SORTS, WordFinder
+from .finder import COMMON, MATCH_MODES, SORTS, WordFinder
 
 
 def main(argv=None):
@@ -34,6 +34,7 @@ def main(argv=None):
     ap.add_argument("-p", "--pattern", default="", help="? = one character, * = any run")
     ap.add_argument("--min", type=int, default=0, help="minimum length")
     ap.add_argument("--max", type=int, default=0, help="maximum length")
+    ap.add_argument("--common", action="store_true", help="hide rare words")
     ap.add_argument("--sort", choices=SORTS, default="familiar")
     ap.add_argument("-n", "--limit", type=int, default=40, help="how many to show (0 = all)")
     ap.add_argument("-f", "--families", action="store_true", help="group into word families")
@@ -50,7 +51,7 @@ def main(argv=None):
 
     query = dict(letters="".join(a.letters), match=MATCH_MODES[1] if a.only else MATCH_MODES[0],
                  starts=a.starts, ends=a.ends, contains=a.contains, pattern=a.pattern,
-                 min_len=a.min, max_len=a.max, sort=a.sort)
+                 min_len=a.min, max_len=a.max, min_familiarity=COMMON if a.common else 0.0, sort=a.sort)
     if not any((query["letters"], a.starts, a.ends, a.contains, a.pattern)):
         ap.print_help()
         return 2

@@ -1,6 +1,6 @@
 import unittest
 
-from kham import WordFinder
+from kham import COMMON, WordFinder
 from kham.thai import syllable_cut, thai_only
 
 
@@ -45,6 +45,13 @@ class FinderTest(unittest.TestCase):
         got = self.wf.search(starts="นัก", min_len=5, max_len=8, sort="long")
         self.assertTrue(all(5 <= len(w) <= 8 for w in got))
         self.assertEqual([len(w) for w in got], sorted((len(w) for w in got), reverse=True))
+
+    def test_min_familiarity(self):
+        everything = self.wf.search(letters="กรน")
+        common = self.wf.search(letters="กรน", min_familiarity=COMMON)
+        self.assertLess(len(common), len(everything))
+        self.assertIn("นักเรียน", common)
+        self.assertTrue(all(self.wf.familiarity(w) >= COMMON for w in common))
 
     def test_familiar_first(self):
         top = self.wf.search(letters="รก", limit=20)

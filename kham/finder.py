@@ -10,6 +10,7 @@ from .thai import (CONSONANTS, HEADS, PLAY_MIN, STOP, char_counts, is_consonant,
 LEXICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "lexicon.tsv")
 SORTS = ("familiar", "long", "short", "az")
 MATCH_MODES = ("all", "only")
+COMMON = 2.0  # min_familiarity that keeps only words people actually meet in text
 
 
 class WordFinder:
@@ -74,7 +75,7 @@ class WordFinder:
 
     def search(self, letters: str = "", match: str = "all", starts: str = "", ends: str = "",
                contains: str = "", pattern: str = "", min_len: int = 0, max_len: int = 0,
-               sort: str = "familiar", limit: int = 0, exclude=()) -> list:
+               min_familiarity: float = 0.0, sort: str = "familiar", limit: int = 0, exclude=()) -> list:
         """Find words. Every filter you pass must hold.
 
         letters   Thai letters in any order, e.g. "ก ร น" or "กรน".
@@ -83,7 +84,9 @@ class WordFinder:
         starts / ends / contains   plain text the word starts with / ends with / contains
         pattern   ? = exactly one character, * = any run of characters, e.g. "ก?ร*" or "*ภาพ"
         min_len / max_len   length in characters (0 = no limit)
-        sort      "familiar" (default), "long", "short" or "az"
+        min_familiarity     drop words below this familiarity; COMMON (2.0) hides words the corpora rarely
+                            or never use. That also hides some real but uncommon words (นวัตกรรม, นกกระทา).
+        sort     "familiar" (default), "long", "short" or "az"
         """
         if match not in MATCH_MODES:
             raise ValueError(f"match must be one of {MATCH_MODES}")
@@ -110,6 +113,8 @@ class WordFinder:
         for w in cands:
             n = len(w)
             if (min_len and n < min_len) or (max_len and n > max_len) or w in skip:
+                continue
+            if min_familiarity and self.fam[w] < min_familiarity:
                 continue
             if starts and not w.startswith(starts):
                 continue
@@ -274,4 +279,4 @@ def _compile(pattern: str):
     return re.compile("".join(out))
 
 
-__all__ = ["WordFinder", "CONSONANTS", "SORTS", "MATCH_MODES"]
+__all__ = ["WordFinder", "CONSONANTS", "SORTS", "MATCH_MODES", "COMMON"]

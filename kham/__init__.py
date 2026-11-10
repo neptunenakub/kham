@@ -1,5 +1,5 @@
 """Kham (คำ) — a fast, dependency-free Thai word finder."""
-from .finder import MATCH_MODES, SORTS, WordFinder
+from .finder import COMMON, MATCH_MODES, SORTS, WordFinder
 from .thai import CONSONANTS
 
 __version__ = "1.0.0"
@@ -20,4 +20,4 @@ def search(**kwargs) -> list:
     return finder().search(**kwargs)
 
 
-__all__ = ["WordFinder", "finder", "search", "CONSONANTS", "SORTS", "MATCH_MODES", "__version__"]
+__all__ = ["WordFinder", "finder", "search", "CONSONANTS", "SORTS", "MATCH_MODES", "COMMON", "__version__"]

@@ -25,6 +25,7 @@ Search 60,000+ Thai words by letters, prefix, suffix, substring or pattern. Resu
 - **Word families**: `การ → การบ้าน การงาน การเรียน`, then word play from what was just listed: `การเรียน → เรียน → นักเรียน`
 - **Fast**: a per-letter index starts from the rarest letter; typical queries take a few milliseconds
 - **Zero dependencies**: pure Python 3.8+ and plain JavaScript; the web demo is static and runs fully in the browser
+- **Web demo in Thai and English**, light and dark themes; click a word to copy it and look up its meaning
 - **Open data**: word list and frequencies from [PyThaiNLP](https://github.com/PyThaiNLP/pythainlp) (CC0)
 
 Good for word games, chat bots, crossword or poem helpers, autocomplete, and teaching Thai.
@@ -42,6 +43,7 @@ pip install git+https://github.com/neptunenakub/kham
 ```
 
 ```python
+import kham
 from kham import WordFinder
 
 wf = WordFinder()
@@ -55,6 +57,7 @@ wf.search(starts="นัก", sort="long", limit=3)
 wf.search(pattern="ก?ร")                       # ['การ', 'กรร']
 wf.search(letters="กรน", match="only")         # only ก ร น as consonants: การ กัน น้ำ ...
 wf.search(ends="ภาพ", min_len=4, max_len=6)
+wf.search(letters="กรน", min_familiarity=kham.COMMON)   # hide rare words
 
 wf.families(wf.search(letters="รก", limit=30))
 # [{'stem': 'การ', 'kind': 'new',  'words': ['การ', 'ต้องการ', 'ทำการ', 'ตัวการ', 'ประการ', 'ทางการ']},
@@ -66,7 +69,7 @@ wf.families(wf.search(letters="รก", limit=30))
 
 | Method | What it does |
 |---|---|
-| `search(letters, match, starts, ends, contains, pattern, min_len, max_len, sort, limit, exclude)` | Find words. Every filter you pass must hold. `match="all"` (default) needs every letter, repeated letters included; `match="only"` allows only these consonants. `sort` is `familiar`, `long`, `short` or `az`. |
+| `search(letters, match, starts, ends, contains, pattern, min_len, max_len, min_familiarity, sort, limit, exclude)` | Find words. Every filter you pass must hold. `match="all"` (default) needs every letter, repeated letters included; `match="only"` allows only these consonants. `min_familiarity=kham.COMMON` hides rare words (and some real but uncommon ones). `sort` is `familiar`, `long`, `short` or `az`. |
 | `families(words, chain=6)` | Group words into families: `[{"stem", "kind", "words"}]`. `kind="play"` marks a jump from a piece of the previous family. |
 | `parts(word)` | Familiar pieces inside a word: `parts("การเรียน") == (["การ"], ["เรียน"])` |
 | `familiarity(word)` | About 0–14; higher means people think of it sooner |
@@ -82,11 +85,19 @@ kham กรน                      # words containing ก, ร and น
 kham กรน --only               # words built only from ก, ร, น
 kham --starts นัก --sort long
 kham --pattern "ก?ร*" --max 5
+kham กรน --common             # hide rare words
 kham รก --families --json
 kham --random 10
 ```
 
 Without installing, run `python -m kham ...` from the repository folder. `kham --help` lists every option.
+
+## Bots and APIs
+
+Two small examples in [`examples/`](examples/):
+
+- [`api_server.py`](examples/api_server.py): a JSON API using only the standard library. Run `python examples/api_server.py`, then call `GET /search?letters=กรน&limit=10`, `/families?letters=รก` or `/word?w=นักเรียน`. Any chat bot (LINE, Telegram, Discord) can call it from its webhook.
+- [`discord_bot.py`](examples/discord_bot.py): a Discord bot with `/kham`, `/khamstart`, `/khamend` and `/khampattern` slash commands. Needs `pip install discord.py` and your own bot token in the `DISCORD_TOKEN` environment variable.
 
 ## Web demo
 
@@ -117,6 +128,7 @@ kham/data/lexicon.tsv the built word list the package and the web demo both use
 docs/                 web demo (index.html, style.css, app.js, lexicon.tsv)
 data/raw/             source word lists
 scripts/build_lexicon.py  rebuilds lexicon.tsv from data/raw
+examples/             JSON API server and Discord bot
 tests/                unit tests
 ```
 
