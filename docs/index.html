@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kham · ค้นหาคำไทย</title>
+<meta name="description" content="ค้นหาคำไทยกว่า 60,000 คำ จากตัวอักษร คำขึ้นต้น ลงท้าย หรือแพทเทิร์น เรียงตามคำที่คนคุ้นเคย และจัดกลุ่มเป็นตระกูลคำ ทำงานในเบราว์เซอร์ทั้งหมด">
+<meta property="og:title" content="Kham · ค้นหาคำไทย">
+<meta property="og:description" content="Thai word finder: 60,000+ words, ranked by how familiar they are, grouped into word families. Open source.">
+<meta name="theme-color" content="#f6f2ea">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="preload" href="lexicon.tsv" as="fetch" crossorigin>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="#" aria-label="Kham หน้าแรก">
+      <span class="brand-tile" aria-hidden="true">ค</span>
+      <span class="brand-name">Kham<span class="brand-th">คำ</span></span>
+    </a>
+    <nav class="top-nav">
+      <a href="#how">ทำงานยังไง</a>
+      <a href="#code">ใช้ในโค้ด</a>
+      <a class="repo-link" href="#" target="_blank" rel="noopener">GitHub</a>
+      <button class="icon-btn" id="theme" type="button" aria-label="สลับธีมสว่าง/มืด" title="สลับธีม">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path class="sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path class="moon" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <div class="hero-text">
+      <p class="eyebrow">Open-source Thai word finder</p>
+      <h1><span class="nw">หาคำไทย</span><br><em class="nw">จากตัวอักษร</em> <span class="nw">ในพริบตา</span></h1>
+      <p class="lede">พิมพ์ตัวอักษรที่มี แล้วได้คำที่ใช้ได้ทันที เรียงจากคำที่คนนึกถึงก่อน และจัดกลุ่มเป็นตระกูลคำแบบที่คนคิดจริง ๆ ใช้เล่นเกมทายคำ แต่งกลอน ทำบอท หรือใส่ในแอปของคุณเองก็ได้</p>
+      <ul class="stats" aria-label="สถิติ">
+        <li><strong id="stat-words">60,000+</strong><span>คำในคลัง</span></li>
+        <li><strong>100%</strong><span>รันในเบราว์เซอร์</span></li>
+        <li><strong>0</strong><span>dependency</span></li>
+      </ul>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="tile t1">ก</div>
+      <div class="tile t2">ร</div>
+      <div class="tile t3">น</div>
+      <div class="hero-words">
+        <span>นักเรียน</span><span>การบ้าน</span><span>จักรยาน</span><span>สงกรานต์</span><span>นักร้อง</span><span>กระดาน</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="finder wrap" aria-label="ค้นหาคำ">
+    <div class="panel">
+      <div class="modes" role="tablist" aria-label="วิธีค้นหา">
+        <button role="tab" data-mode="all" aria-selected="true">มีตัวอักษรครบ</button>
+        <button role="tab" data-mode="only" aria-selected="false">ใช้แค่ตัวเหล่านี้</button>
+        <button role="tab" data-mode="starts" aria-selected="false">ขึ้นต้นด้วย</button>
+        <button role="tab" data-mode="ends" aria-selected="false">ลงท้ายด้วย</button>
+        <button role="tab" data-mode="contains" aria-selected="false">มีคำว่า</button>
+        <button role="tab" data-mode="pattern" aria-selected="false">แพทเทิร์น</button>
+      </div>
+
+      <div class="search-row">
+        <label class="sr-only" for="q">คำค้นหา</label>
+        <input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="th" placeholder="ก ร น">
+        <button class="clear" id="clear" type="button" aria-label="ล้างคำค้น" hidden>×</button>
+      </div>
+      <p class="hint" id="hint">พิมพ์ตัวอักษรไทยกี่ตัวก็ได้ ลำดับไม่สำคัญ ตัวซ้ำต้องมีซ้ำในคำด้วย</p>
+      <div class="tiles" id="tiles" aria-hidden="true"></div>
+
+      <details class="kbd" id="kbd-wrap">
+        <summary>แป้นพยัญชนะ</summary>
+        <div class="kbd-grid" id="kbd"></div>
+      </details>
+
+      <div class="options">
+        <label class="opt">
+          <span>ความยาว</span>
+          <span class="range">
+            <input id="min" type="number" min="1" max="30" inputmode="numeric" placeholder="ต่ำสุด" aria-label="ความยาวต่ำสุด">
+            <span aria-hidden="true">–</span>
+            <input id="max" type="number" min="1" max="30" inputmode="numeric" placeholder="สูงสุด" aria-label="ความยาวสูงสุด">
+          </span>
+        </label>
+        <label class="opt">
+          <span>เรียงตาม</span>
+          <select id="sort">
+            <option value="familiar">คนคุ้นเคยก่อน</option>
+            <option value="long">ยาวที่สุดก่อน</option>
+            <option value="short">สั้นที่สุดก่อน</option>
+            <option value="az">ก–ฮ</option>
+          </select>
+        </label>
+        <div class="opt">
+          <span>มุมมอง</span>
+          <div class="seg" role="group" aria-label="มุมมองผลลัพธ์">
+            <button type="button" data-view="list" aria-pressed="true">รายการ</button>
+            <button type="button" data-view="families" aria-pressed="false">ตระกูลคำ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-left">
+        <p id="count" aria-live="polite">กำลังโหลดคลังคำ…</p>
+        <p class="legend"><span class="meter" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span> ความคุ้นเคย <span class="sw" aria-hidden="true"></span> คำใช้บ่อยที่คัดไว้ · คลิกคำเพื่อคัดลอก</p>
+      </div>
+      <div class="meta-actions">
+        <button class="ghost" id="share" type="button">คัดลอกลิงก์</button>
+        <button class="ghost" id="random" type="button">สุ่มคำ</button>
+      </div>
+    </div>
+
+    <div id="results" class="results"></div>
+    <div class="more-row"><button class="primary" id="more" type="button" hidden>แสดงเพิ่ม</button></div>
+  </section>
+
+  <section class="how wrap" id="how">
+    <h2>ทำงานยังไง</h2>
+    <div class="how-grid">
+      <article>
+        <span class="num">01</span>
+        <h3>ค้นจากตัวที่หายากที่สุด</h3>
+        <p>คลังคำถูกทำ index ตามตัวอักษร เวลาค้นจะเริ่มจากตัวอักษรที่มีคำน้อยที่สุด แทนที่จะไล่ทั้ง 60,000 คำ เลยตอบได้ในไม่กี่มิลลิวินาที</p>
+      </article>
+      <article>
+        <span class="num">02</span>
+        <h3>เรียงตามที่คนนึกถึงก่อน</h3>
+        <p>ให้คะแนนความคุ้นเคยจากความถี่ใน Thai National Corpus และ Thai Textbook Corpus ถ่วงน้ำหนักให้ภาษาชีวิตประจำวันมากกว่าภาษาข่าว คำประสมอย่าง "การบ้าน" ได้คะแนนจากส่วนประกอบด้วย</p>
+      </article>
+      <article>
+        <span class="num">03</span>
+        <h3>จัดตระกูลคำแบบคน</h3>
+        <p>หาคำที่ซ่อนอยู่ในคำ (การ + เรียน) แล้วต่อเป็นสาย การ → การบ้าน การงาน จากนั้นเล่นคำต่อจากชิ้นที่เพิ่งเห็น การเรียน → เรียน → นักเรียน</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="code wrap" id="code">
+    <div class="code-head">
+      <h2>ใช้ในโค้ดของคุณ</h2>
+      <p>Python ล้วน ไม่มี dependency · ใช้ใน bot, เกม หรือ API ได้เลย</p>
+    </div>
+    <div class="code-tabs" role="tablist" aria-label="ตัวอย่างโค้ด">
+      <button role="tab" data-code="py" aria-selected="true">Python</button>
+      <button role="tab" data-code="cli" aria-selected="false">Command line</button>
+    </div>
+<pre class="code-block" data-code="py"><code><span class="c"># pip install git+<span class="repo-text">https://github.com/your-username/kham</span></span>
+<span class="k">from</span> kham <span class="k">import</span> WordFinder
+
+wf = WordFinder()
+wf.search(letters=<span class="s">"กรน"</span>, limit=<span class="n">5</span>)
+<span class="c"># ['นักเรียน', 'นักร้อง', 'การบ้าน', 'การงาน', 'งานการ']</span>
+
+wf.search(starts=<span class="s">"นัก"</span>, sort=<span class="s">"long"</span>, limit=<span class="n">3</span>)
+<span class="c"># ['นักสังคมสงเคราะห์', 'นักประชาสัมพันธ์', 'นักประวัติศาสตร์']</span>
+
+wf.search(pattern=<span class="s">"ก?ร"</span>)        <span class="c"># ? = 1 ตัว, * = กี่ตัวก็ได้</span>
+wf.families(wf.search(letters=<span class="s">"รก"</span>, limit=<span class="n">50</span>))</code></pre>
+<pre class="code-block" data-code="cli" hidden><code><span class="c"># หลัง pip install จะมีคำสั่ง kham (หรือใช้ python -m kham)</span>
+kham กรน                     <span class="c"># คำที่มี ก ร น</span>
+kham กรน --only              <span class="c"># คำที่ใช้แค่ ก ร น</span>
+kham --starts นัก --sort long
+kham --pattern <span class="s">"ก?ร*"</span> --max <span class="n">5</span>
+kham รก --families --json</code></pre>
+    <button class="ghost copy-code" id="copy-code" type="button">คัดลอกโค้ด</button>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-row">
+    <p>Kham · MIT License · คลังคำและความถี่จาก <a href="https://github.com/PyThaiNLP/pythainlp" target="_blank" rel="noopener">PyThaiNLP</a> (CC0)</p>
+    <a class="repo-link" href="#" target="_blank" rel="noopener">ดูโค้ดบน GitHub →</a>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>

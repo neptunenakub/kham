@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kham"
+version = "1.0.0"
+description = "Fast, dependency-free Thai word finder: search 60k Thai words by letters, prefix, suffix or pattern."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+keywords = ["thai", "thai-language", "word-finder", "dictionary", "nlp", "word-game"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: Thai",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+[project.scripts]
+kham = "kham.__main__:main"
+
+[tool.setuptools]
+packages = ["kham"]
+
+[tool.setuptools.package-data]
+kham = ["data/lexicon.tsv"]
