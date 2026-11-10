@@ -21,6 +21,9 @@ const HEADS = new Set(("การ ความ นัก ผู้ คน น้
   "ทะเล ประตู หลัง ข้าง กลาง รอง ถุง กล่อง ขวด จาน โต๊ะ เหล็ก ทำ กิน เล่น เรียน รัก ขาย ซื้อ เดิน " +
   "นอน ดู ฟัง พูด อ่าน เขียน ร้อง").split(" "));
 const PART_MIN = 5.5, PLAY_MIN = 6.0;
+// grammar words rank lower in rhyme results (same list as kham/thai.py)
+const GRAMMAR = new Set([...STOP, ...("กัน มัน อัน นั่น นั้น นี่ นี้ โน่น นู่น ดังนั้น เท่านั้น ทั้งนั้น ฉะนั้น อะไร ทำไม อย่างไร ยังไง ใคร ใด ไหน ที่ไหน เมื่อไร เมื่อไหร่ เท่าไร เท่าไหร่ ไว้ ทำให้ ต่อไป แก่ แด่ ต่อ ถ้า หาก แม้ นอก บน ล่าง ตาม กว่า เคย ควร อาจ คง น่า เลย นะ ครับ ค่ะ คะ จ้ะ จ๊ะ สิ ซิ ล่ะ เถอะ หรอก เหรอ ไหม มั้ย หนึ่ง ทั้ง ทุก บาง หลาย ต่าง เอง ดัง เช่น จน จนถึง หมายถึง กล่าวถึง พูดถึง นึกถึง เกี่ยวกับ สำหรับ ระหว่าง เนื่องจาก อย่างนั้น อย่างนี้ แบบนั้น แบบนี้ ดังกล่าว ซึ่งกัน ด้วยกัน เดียวกัน เหมือนกัน ทั้งหลาย ทั้งหมด").split(" ")]);
+const GRAMMAR_PENALTY = 3;
 
 
 const isCons = (ch) => ch >= "ก" && ch <= "ฮ";
@@ -68,9 +71,13 @@ function compilePattern(p) {
 
 function search({ letters = "", match = "all", starts = "", ends = "", contains = "", pattern = "", rhymes = "",
                   minLen = 0, maxLen = 0, minFam = 0, sort = "familiar" }) {
-  [letters, starts, ends, contains, rhymes] = [letters, starts, ends, contains, rhymes].map(thaiOnly);
+  const given = [letters, starts, ends, contains, rhymes];
+  [letters, starts, ends, contains, rhymes] = given.map(thaiOnly);
+  // a filter with no Thai in it matches nothing, not everything
+  if (given.some((g, i) => g.trim() && !thaiOnly(g))) return [];
   const sound = rhymes ? rhymeKey(rhymes) : "";
   if (rhymes && !sound) return [];
+  const same = sound ? lastSyllable(rhymes) : "";
   const need = match === "all" ? countChars(letters) : new Map();
   const allowed = match === "only" ? new Set([...letters].filter(isCons)) : null;
   if (allowed && !allowed.size) return [];
@@ -89,7 +96,7 @@ function search({ letters = "", match = "all", starts = "", ends = "", contains 
     const n = w.length;
     if ((minLen && n < minLen) || (maxLen && n > maxLen)) continue;
     if (minFam && (L.fam.get(w) || 0) < minFam) continue;
-    if (sound && w.endsWith(rhymes)) continue;  // the same syllable again is not a rhyme
+    if (sound && w.endsWith(same)) continue;  // the same syllable again is not a rhyme (หัวใจ / ดีใจ)
     if (starts && !w.startsWith(starts)) continue;
     if (ends && !w.endsWith(ends)) continue;
     if (contains && !w.includes(contains)) continue;
@@ -104,7 +111,9 @@ function search({ letters = "", match = "all", starts = "", ends = "", contains 
 
   const fam = (w) => L.fam.get(w) || 0;
   const by = {
-    familiar: (a, b) => score(b) - score(a) || collator.compare(a, b),
+    familiar: sound
+      ? (a, b) => (score(b) - (GRAMMAR.has(b) ? GRAMMAR_PENALTY : 0)) - (score(a) - (GRAMMAR.has(a) ? GRAMMAR_PENALTY : 0)) || collator.compare(a, b)
+      : (a, b) => score(b) - score(a) || collator.compare(a, b),
     long: (a, b) => b.length - a.length || fam(b) - fam(a) || collator.compare(a, b),
     short: (a, b) => a.length - b.length || fam(b) - fam(a) || collator.compare(a, b),
     az: (a, b) => collator.compare(a, b),
@@ -338,6 +347,16 @@ function rhymeKey(word) {
   return "o:" + f;
 }
 
+/** The written last syllable: หัวใจ -> ใจ, นักเรียน -> เรียน. The whole word when unsure. */
+function lastSyllable(word) {
+  const key = rhymeKey(word);
+  if (!key) return word;
+  for (let k = word.length - 1; k > 0; k--) {
+    if (syllableCut(word, k) && rhymeKey(word.slice(k)) === key) return word.slice(k);
+  }
+  return word;
+}
+
 function byRhyme() {
   if (!L.rhymes) {
     L.rhymes = new Map();
@@ -353,7 +372,7 @@ function byRhyme() {
 }
 
 const api = {
-  load: loadLexicon, search, families, rhymeKey, parts: wordParts,
+  load: loadLexicon, search, families, rhymeKey, lastSyllable, parts: wordParts,
   familiarity: (w) => L.fam.get(w) || 0, lexicon: L, CONSONANTS: CONS, COMMON,
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;

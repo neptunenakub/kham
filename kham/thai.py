@@ -18,6 +18,17 @@ HEADS = frozenset(
     "นอน ดู ฟัง พูด อ่าน เขียน ร้อง".split()
 )
 
+# More grammar words. Rhyme results push these and STOP down: someone looking for a rhyme for ฝัน
+# wants วัน สำคัญ รางวัล, not กัน มัน อัน.
+GRAMMAR = STOP | frozenset(
+    "กัน มัน อัน นั่น นั้น นี่ นี้ โน่น นู่น ดังนั้น เท่านั้น ทั้งนั้น ฉะนั้น อะไร ทำไม อย่างไร ยังไง ใคร ใด ไหน "
+    "ที่ไหน เมื่อไร เมื่อไหร่ เท่าไร เท่าไหร่ ไว้ ทำให้ ต่อไป แก่ แด่ ต่อ ถ้า หาก แม้ นอก บน ล่าง ตาม กว่า "
+    "เคย ควร อาจ คง น่า เลย นะ ครับ ค่ะ คะ จ้ะ จ๊ะ สิ ซิ ล่ะ เถอะ หรอก เหรอ ไหม มั้ย หนึ่ง ทั้ง ทุก บาง "
+    "หลาย ต่าง เอง ดัง เช่น จน จนถึง หมายถึง กล่าวถึง พูดถึง นึกถึง เกี่ยวกับ สำหรับ ระหว่าง เนื่องจาก "
+    "อย่างนั้น อย่างนี้ แบบนั้น แบบนี้ ดังกล่าว ซึ่งกัน ด้วยกัน เดียวกัน เหมือนกัน ทั้งหลาย ทั้งหมด".split()
+)
+GRAMMAR_PENALTY = 3.0
+
 PART_MIN = 5.5  # how familiar a piece must be before a person "sees" it inside a longer word
 PLAY_MIN = 6.0  # a word-play jump only goes where the best next word is at least this familiar
 

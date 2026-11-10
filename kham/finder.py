@@ -4,8 +4,8 @@ import os
 import random
 import re
 
-from .rhyme import rhyme_key
-from .thai import (CONSONANTS, HEADS, PLAY_MIN, STOP, char_counts, is_consonant, sort_key, thai_only,
+from .rhyme import last_syllable, rhyme_key
+from .thai import (CONSONANTS, GRAMMAR, GRAMMAR_PENALTY, HEADS, PLAY_MIN, STOP, char_counts, is_consonant, sort_key, thai_only,
                    word_parts)
 
 LEXICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "lexicon.tsv")
@@ -99,7 +99,8 @@ class WordFinder:
         starts / ends / contains   plain text the word starts with / ends with / contains
         pattern   ? = exactly one character, * = any run of characters, e.g. "ก?ร*" or "*ภาพ"
         rhymes    a word or syllable to rhyme with: same vowel and final sound in the last syllable
-                  (รัก -> จัก หนัก ที่พัก). Words that simply end with the same text are left out.
+                  (รัก -> จัก หนัก ที่พัก). Words ending in that same syllable are left out, and
+                  grammar words (กัน มัน อัน) are ranked lower.
         min_len / max_len   length in characters (0 = no limit)
         min_familiarity     drop words below this familiarity; COMMON (2.0) hides words the corpora rarely
                             or never use. That also hides some real but uncommon words (นวัตกรรม, นกกระทา).
@@ -109,17 +110,20 @@ class WordFinder:
             raise ValueError(f"match must be one of {MATCH_MODES}")
         if sort not in SORTS:
             raise ValueError(f"sort must be one of {SORTS}")
-        letters, starts, ends, contains = (thai_only(x) for x in (letters, starts, ends, contains))
+        given = (letters, starts, ends, contains, rhymes)
+        letters, starts, ends, contains, rhymes = (thai_only(x) for x in given)
+        if any(g.strip() and not clean for g, clean in zip(given, (letters, starts, ends, contains, rhymes))):
+            return []  # a filter with no Thai in it (kham love) matches nothing, not everything
         need = char_counts(letters) if match == "all" else {}
         allowed = {ch for ch in letters if is_consonant(ch)} if match == "only" else None
         if match == "only" and not allowed:
             return []
         rx = _compile(pattern) if pattern.strip() else None
         skip = set(exclude)
-        rhymes = thai_only(rhymes)
         sound = rhyme_key(rhymes) if rhymes else ""
         if rhymes and not sound:
             return []
+        same = last_syllable(rhymes) if sound else ""
 
         # start from the rarest required character instead of scanning every word
         idx = self._by_char()
@@ -139,8 +143,8 @@ class WordFinder:
                 continue
             if min_familiarity and self.fam[w] < min_familiarity:
                 continue
-            if sound and w.endswith(rhymes):
-                continue  # the same syllable again is not a rhyme
+            if sound and w.endswith(same):
+                continue  # the same syllable again is not a rhyme (หัวใจ / ดีใจ)
             if starts and not w.startswith(starts):
                 continue
             if ends and not w.endswith(ends):
@@ -155,7 +159,9 @@ class WordFinder:
                 continue
             out.append(w)
 
-        if sort == "familiar":
+        if sort == "familiar" and sound:
+            out.sort(key=lambda w: (-self.score(w) + (GRAMMAR_PENALTY if w in GRAMMAR else 0.0), sort_key(w)))
+        elif sort == "familiar":
             out.sort(key=lambda w: (-self.score(w), sort_key(w)))
         elif sort == "long":
             out.sort(key=lambda w: (-len(w), -self.fam[w], sort_key(w)))

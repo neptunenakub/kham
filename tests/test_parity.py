@@ -18,6 +18,8 @@ SEARCHES = [
     dict(starts="นัก"), dict(ends="ภาพ"), dict(contains="เรียน"), dict(pattern="ก?ร*", max_len=5),
     dict(pattern="*ภาพ"), dict(letters="มน", min_len=4, max_len=6), dict(letters="กรน", min_familiarity=COMMON),
     dict(rhymes="รัก"), dict(rhymes="เรียน"), dict(rhymes="ใจ", min_len=4), dict(rhymes="จันทร์", starts="ส"),
+    dict(rhymes="หัวใจ"), dict(rhymes="นักเรียน"), dict(letters="love"), dict(starts="abc"), dict(rhymes="x"),
+    dict(letters="k ก"),
 ]
 SPLITS = ["การเรียน", "นักเรียน", "สังคม", "เรียก", "การบ้าน", "โรงพยาบาล", "ความรัก", "กรรมการ"]
 

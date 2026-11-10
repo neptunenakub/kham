@@ -11,6 +11,8 @@ docs/kham.js has the same function, and tests/parity.mjs checks that the two agr
 """
 import re
 
+from .thai import syllable_cut
+
 CONS = frozenset("กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ")  # sets: "" must not count as a member
 LEAD = frozenset("เแโไใ")
 TONES = "่้๊๋"
@@ -167,4 +169,16 @@ def rhyme_key(word: str) -> str:
     return "o:" + f                                                # คน ลม ตลก
 
 
-__all__ = ["rhyme_key"]
+def last_syllable(word: str) -> str:
+    """The written last syllable, found as the shortest ending that still has the word's rhyme:
+    หัวใจ -> ใจ, ความรัก -> รัก, นักเรียน -> เรียน. Returns the whole word when unsure."""
+    key = rhyme_key(word)
+    if not key:
+        return word
+    for k in range(len(word) - 1, 0, -1):
+        if syllable_cut(word, k) and rhyme_key(word[k:]) == key:
+            return word[k:]
+    return word
+
+
+__all__ = ["rhyme_key", "last_syllable"]

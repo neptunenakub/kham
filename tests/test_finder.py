@@ -65,6 +65,24 @@ class FinderTest(unittest.TestCase):
         self.assertTrue(all(self.wf.rhyme_key(w) == "a:k" for w in got))
         self.assertTrue(all(w.startswith("น") for w in self.wf.search(rhymes="รัก", starts="น")))
 
+    def test_rhymes_skip_the_same_syllable(self):
+        got = self.wf.search(rhymes="หัวใจ")
+        self.assertIn("ต้นไม้", got)
+        for w in ("ใจ", "ดีใจ", "หัวใจ"):
+            self.assertNotIn(w, got)
+
+    def test_rhymes_rank_grammar_words_lower(self):
+        got = self.wf.search(rhymes="ฝัน")
+        self.assertLess(got.index("วัน"), got.index("กัน"))
+        self.assertLess(got.index("รางวัล"), got.index("มัน"))
+
+    def test_non_thai_filter_matches_nothing(self):
+        self.assertEqual(self.wf.search(letters="love"), [])
+        self.assertEqual(self.wf.search(starts="abc"), [])
+        self.assertEqual(self.wf.search(rhymes="x"), [])
+        self.assertTrue(self.wf.search(letters="k ก"))    # Thai mixed with other text still works
+        self.assertTrue(self.wf.search(min_len=18))       # no text filter at all is allowed
+
     def test_min_familiarity(self):
         everything = self.wf.search(letters="กรน")
         common = self.wf.search(letters="กรน", min_familiarity=COMMON)
