@@ -45,7 +45,7 @@
 
 <header class="bar">
   <div class="wrap bar-row">
-    <a class="brand" href="./"><span class="brand-th">คำ</span><span class="brand-en">Kham</span></a>
+    <a class="brand" href="./">Kham</a>
     <div class="tools">
       <div class="lang" role="group" aria-label="ภาษา" data-i18n-aria="a_lang">
         <svg class="i" aria-hidden="true"><use href="#i-globe"/></svg>
@@ -64,8 +64,9 @@
 </header>
 
 <main class="wrap">
-  <h1 data-i18n="h1">หาคำไทยจากตัวอักษรที่มี</h1>
-  <p class="sub" data-i18n="sub">พิมพ์ตัวอักษร แล้วดูว่าประกอบเป็นคำอะไรได้บ้าง จากคลัง 60,000+ คำ</p>
+  <h1 lang="th">คำ</h1>
+  <p class="sub" data-i18n="sub">หาคำไทยจากตัวอักษรที่มี หาคำสัมผัส หรือคำที่ขึ้นต้นและลงท้ายตามต้องการ</p>
+  <p class="uses" data-i18n="uses">สำหรับเล่นเกมต่อคำ แต่งกลอน เขียนเพลง และเรียนภาษาไทย · คลัง 60,000+ คำ</p>
 
   <div class="search">
     <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
@@ -80,6 +81,7 @@
   <div class="modes" role="tablist" aria-label="วิธีค้นหา" data-i18n-aria="a_modes">
     <button role="tab" data-mode="all" aria-selected="true" data-i18n="mode_all">มีตัวอักษรครบ</button>
     <button role="tab" data-mode="only" aria-selected="false" data-i18n="mode_only">ใช้แค่ตัวเหล่านี้</button>
+    <button role="tab" data-mode="rhymes" aria-selected="false" data-i18n="mode_rhymes">สัมผัสกับ</button>
     <button role="tab" data-mode="starts" aria-selected="false" data-i18n="mode_starts">ขึ้นต้นด้วย</button>
     <button role="tab" data-mode="ends" aria-selected="false" data-i18n="mode_ends">ลงท้ายด้วย</button>
     <button role="tab" data-mode="contains" aria-selected="false" data-i18n="mode_contains">มีคำว่า</button>
@@ -136,6 +138,7 @@
       <div><dt data-i18n="how_1_h">ค้นเร็ว</dt><dd data-i18n="how_1"></dd></div>
       <div><dt data-i18n="how_2_h">เรียงตามความคุ้น</dt><dd data-i18n="how_2"></dd></div>
       <div><dt data-i18n="how_3_h">ตระกูลคำ</dt><dd data-i18n="how_3"></dd></div>
+      <div><dt data-i18n="how_4_h">คำสัมผัส</dt><dd data-i18n="how_4"></dd></div>
     </dl>
   </section>
 
@@ -147,15 +150,17 @@ from kham import WordFinder
 
 wf = WordFinder()
 wf.search(letters="กรน", limit=5)
-<span class="c"># ['นักเรียน', 'นักร้อง', 'การบ้าน', 'การงาน', 'งานการ']</span>
+<span class="c"># ['นักเรียน', 'นักร้อง', 'จักรยาน', 'กระดาน', 'น่ารัก']</span>
 
 wf.search(starts="นัก", sort="long", limit=3)
 wf.search(pattern="ก?ร")        <span class="c"># ? = one character, * = any run</span>
+wf.search(rhymes="รัก", limit=6)    <span class="c"># ['นัก', 'สัก', 'มัก', 'รู้จัก', 'หลัก', 'สุนัข']</span>
 wf.families(wf.search(letters="รก", limit=50))</code></pre>
     <p data-i18n="dev_cli"></p>
 <pre><code>kham กรน                     <span class="c"># words with ก, ร and น</span>
 kham --starts นัก --sort long
 kham --pattern "ก?ร*" --max 5
+kham --rhymes รัก            <span class="c"># words that rhyme with รัก</span>
 kham รก --families --json</code></pre>
   </section>
 </main>
@@ -168,6 +173,7 @@ kham รก --families --json</code></pre>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="kham.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

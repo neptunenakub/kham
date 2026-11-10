@@ -1,4 +1,4 @@
-"""A Discord bot that finds Thai words: /kham, /khamstart, /khamend and /khampattern.
+"""A Discord bot that finds Thai words: /kham, /khamrhyme, /khamstart, /khamend and /khampattern.
 
 Setup
     1. pip install discord.py
@@ -41,6 +41,12 @@ tree = app_commands.CommandTree(client)
 @app_commands.describe(letters="ตัวอักษรไทย เช่น กรน", rare="รวมคำหายากด้วย")
 async def kham(interaction: discord.Interaction, letters: str, rare: bool = False):
     await interaction.response.send_message(reply(f"มี {letters}", common=not rare, letters=letters))
+
+
+@tree.command(name="khamrhyme", description="หาคำไทยที่สัมผัสกับคำนี้")
+@app_commands.describe(word="เช่น รัก", rare="รวมคำหายากด้วย")
+async def khamrhyme(interaction: discord.Interaction, word: str, rare: bool = False):
+    await interaction.response.send_message(reply(f"สัมผัสกับ {word}", common=not rare, rhymes=word))
 
 
 @tree.command(name="khamstart", description="หาคำไทยที่ขึ้นต้นด้วยข้อความนี้")

@@ -20,7 +20,7 @@ Search 60,000+ Thai words by letters, prefix, suffix, substring or pattern. Resu
 
 ## Features
 
-- **6 search modes**: contains all these letters · uses only these letters · starts with · ends with · contains · pattern (`?` = one character, `*` = any run)
+- **7 search modes**: contains all these letters · uses only these letters · rhymes with · starts with · ends with · contains · pattern (`?` = one character, `*` = any run)
 - **Ranked like a person thinks**: familiarity scores from two Thai corpora, so `นักเรียน` comes before `นักธรรม`
 - **Word families**: `การ → การบ้าน การงาน การเรียน`, then word play from what was just listed: `การเรียน → เรียน → นักเรียน`
 - **Fast**: a per-letter index starts from the rarest letter; typical queries take a few milliseconds
@@ -49,7 +49,7 @@ from kham import WordFinder
 wf = WordFinder()
 
 wf.search(letters="กรน", limit=5)
-# ['นักเรียน', 'นักร้อง', 'การบ้าน', 'การงาน', 'งานการ']
+# ['นักเรียน', 'นักร้อง', 'จักรยาน', 'กระดาน', 'น่ารัก']
 
 wf.search(starts="นัก", sort="long", limit=3)
 # ['นักสังคมสงเคราะห์', 'นักประชาสัมพันธ์', 'นักประวัติศาสตร์']
@@ -59,18 +59,23 @@ wf.search(letters="กรน", match="only")         # only ก ร น as conso
 wf.search(ends="ภาพ", min_len=4, max_len=6)
 wf.search(letters="กรน", min_familiarity=kham.COMMON)   # hide rare words
 
+wf.search(rhymes="รัก", limit=6)               # same vowel and final sound in the last syllable
+# ['นัก', 'สัก', 'มัก', 'รู้จัก', 'หลัก', 'สุนัข']
+wf.rhyme_key("เรียน")                          # 'ia:n'
+
 wf.families(wf.search(letters="รก", limit=30))
-# [{'stem': 'การ', 'kind': 'new',  'words': ['การ', 'ต้องการ', 'ทำการ', 'ตัวการ', 'ประการ', 'ทางการ']},
-#  {'stem': 'ทำ',  'kind': 'play', 'words': ['กระทำ']},
-#  {'stem': 'กระ', 'kind': 'play', 'words': ['กระดาษ', 'กระโดด', 'กระเป๋า', 'กระทรวง']}, ...]
+# [{'stem': 'การ', 'kind': 'new',  'words': ['การ', 'ต้องการ', 'ประการ']},
+#  {'stem': 'ประ', 'kind': 'play', 'words': ['ประสบการณ์', 'ประกอบ']},
+#  {'stem': 'นัก', 'kind': 'new',  'words': ['นักเรียน']}, ...]
 ```
 
 ### API
 
 | Method | What it does |
 |---|---|
-| `search(letters, match, starts, ends, contains, pattern, min_len, max_len, min_familiarity, sort, limit, exclude)` | Find words. Every filter you pass must hold. `match="all"` (default) needs every letter, repeated letters included; `match="only"` allows only these consonants. `min_familiarity=kham.COMMON` hides rare words (and some real but uncommon ones). `sort` is `familiar`, `long`, `short` or `az`. |
+| `search(letters, match, starts, ends, contains, pattern, rhymes, min_len, max_len, min_familiarity, sort, limit, exclude)` | Find words. Every filter you pass must hold. `match="all"` (default) needs every letter, repeated letters included; `match="only"` allows only these consonants. `min_familiarity=kham.COMMON` hides rare words (and some real but uncommon ones). `sort` is `familiar`, `long`, `short` or `az`. |
 | `families(words, chain=6)` | Group words into families: `[{"stem", "kind", "words"}]`. `kind="play"` marks a jump from a piece of the previous family. |
+| `rhyme_key(word)` | The rhyming sound of the last syllable as `vowel:final`: `rhyme_key("รัก") == "a:k"` |
 | `parts(word)` | Familiar pieces inside a word: `parts("การเรียน") == (["การ"], ["เรียน"])` |
 | `familiarity(word)` | About 0–14; higher means people think of it sooner |
 | `is_word(word)` / `word in wf` | Dictionary check |
@@ -86,6 +91,7 @@ kham กรน --only               # words built only from ก, ร, น
 kham --starts นัก --sort long
 kham --pattern "ก?ร*" --max 5
 kham กรน --common             # hide rare words
+kham --rhymes รัก             # words that rhyme with รัก
 kham รก --families --json
 kham --random 10
 ```
@@ -97,11 +103,11 @@ Without installing, run `python -m kham ...` from the repository folder. `kham -
 Two small examples in [`examples/`](examples/):
 
 - [`api_server.py`](examples/api_server.py): a JSON API using only the standard library. Run `python examples/api_server.py`, then call `GET /search?letters=กรน&limit=10`, `/families?letters=รก` or `/word?w=นักเรียน`. Any chat bot (LINE, Telegram, Discord) can call it from its webhook.
-- [`discord_bot.py`](examples/discord_bot.py): a Discord bot with `/kham`, `/khamstart`, `/khamend` and `/khampattern` slash commands. Needs `pip install discord.py` and your own bot token in the `DISCORD_TOKEN` environment variable.
+- [`discord_bot.py`](examples/discord_bot.py): a Discord bot with `/kham`, `/khamrhyme`, `/khamstart`, `/khamend` and `/khampattern` slash commands. Needs `pip install discord.py` and your own bot token in the `DISCORD_TOKEN` environment variable.
 
 ## Web demo
 
-The demo in [`docs/`](docs/) is three static files plus the word list. No build step.
+The demo in [`docs/`](docs/) is a few static files plus the word list. No build step.
 
 ```bash
 python -m http.server 8000 --directory docs
@@ -111,25 +117,26 @@ Then open http://localhost:8000. (Opening `index.html` directly does not work, b
 
 **Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / `/docs`. If you fork this project, change the `REPO` constant at the top of [`docs/app.js`](docs/app.js) to your own repository URL.
 
-The search engine is exposed in the browser console as `window.kham.search(...)` and `window.kham.families(...)`.
+The engine is one file with no dependencies, [`docs/kham.js`](docs/kham.js). It works in a browser (`Kham.load(text)`, `Kham.search({ letters: "กรน" })`, `Kham.families(words)`, `Kham.rhymeKey("รัก")`) and in Node (`require("./docs/kham.js")`).
 
 ## How it works
 
 1. **Index by letter.** Every character maps to the words that contain it. A query starts from its rarest required letter, so `ฌ` scans a handful of words instead of 60,000.
-2. **Familiarity.** Each word gets a score from its frequency in the Thai National Corpus (news, academic) and the Thai Textbook Corpus (everyday text), weighted towards everyday text. Compounds are often split in real text (`การบ้าน` is counted less than `การ` and `บ้าน`), so a compound on a common head such as `การ`, `นัก` or `น้ำ` is also judged by its weaker piece. A small hand-picked list of everyday words and loanwords gets a boost.
+2. **Familiarity.** Each word gets a score from its frequency in the Thai National Corpus (news, academic) and the Thai Textbook Corpus (everyday text), weighted towards everyday text. Compounds are often split in real text (`การบ้าน` is counted less than `การ` and `บ้าน`), so a compound on a common head such as `การ`, `นัก` or `น้ำ` is pulled halfway towards its weaker piece. Only halfway, because common pieces say little about the compound itself. Hand-picked everyday words and loanwords get a minimum score and a boost, since the corpora miss words like `มือถือ`.
 3. **Word pieces.** A word is cut only where a Thai syllable can start: not before a vowel or tone mark, not after a leading vowel (`เ แ โ ใ ไ`), not inside `เ-ีย / เ-ือ / -ัว`, and not before a silenced letter (`การณ์`). Familiar pieces on either side of a cut are what a person "sees" in the word.
 4. **Families.** Stems are scored by their best unused word. The best stem forms a family; afterwards, a familiar piece of what was just listed often starts the next one (`สังคม → คม → คมมีด`), just like people do when they brainstorm words.
+5. **Rhymes.** Rules read the spelling of the last syllable from the end of the word (silenced letters, leading vowels, clusters, implied vowels) and reduce it to a vowel and a final sound, such as `a:k` for `รัก`. Words with the same key rhyme. There is no pronunciation dictionary, so irregular spellings and a few ambiguous ones come out wrong.
 
 ## Project layout
 
 ```
-kham/                 Python package (finder.py, thai.py, CLI in __main__.py)
+kham/                 Python package (finder.py, rhyme.py, thai.py, CLI in __main__.py)
 kham/data/lexicon.tsv the built word list the package and the web demo both use
-docs/                 web demo (index.html, style.css, app.js, lexicon.tsv)
+docs/                 web demo (index.html, style.css, app.js) and kham.js, the engine for browsers and Node
 data/raw/             source word lists
 scripts/build_lexicon.py  rebuilds lexicon.tsv from data/raw
 examples/             JSON API server and Discord bot
-tests/                unit tests
+tests/                unit tests, and a check that kham.js and the Python package agree
 ```
 
 Rebuild the word list after editing anything in `data/raw/`:

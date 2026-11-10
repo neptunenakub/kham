@@ -4,6 +4,7 @@ import os
 import random
 import re
 
+from .rhyme import rhyme_key
 from .thai import (CONSONANTS, HEADS, PLAY_MIN, STOP, char_counts, is_consonant, sort_key, thai_only,
                    word_parts)
 
@@ -38,6 +39,7 @@ class WordFinder:
                     self.common.add(w)
         self.words = list(self.fam)
         self._index = None
+        self._rhymes = None
         self._parts = {}
 
     # ---------- lookups ----------
@@ -73,8 +75,21 @@ class WordFinder:
             self._index = idx
         return self._index
 
+    def _by_rhyme(self):
+        if self._rhymes is None:
+            groups = {}
+            for w in self.words:
+                groups.setdefault(rhyme_key(w), []).append(w)
+            groups.pop("", None)
+            self._rhymes = groups
+        return self._rhymes
+
+    def rhyme_key(self, word: str) -> str:
+        """The rhyming sound of a word's last syllable as "vowel:final", e.g. รัก -> "a:k"."""
+        return rhyme_key(thai_only(word))
+
     def search(self, letters: str = "", match: str = "all", starts: str = "", ends: str = "",
-               contains: str = "", pattern: str = "", min_len: int = 0, max_len: int = 0,
+               contains: str = "", pattern: str = "", rhymes: str = "", min_len: int = 0, max_len: int = 0,
                min_familiarity: float = 0.0, sort: str = "familiar", limit: int = 0, exclude=()) -> list:
         """Find words. Every filter you pass must hold.
 
@@ -83,6 +98,8 @@ class WordFinder:
                   match="only": every consonant in the word is one of these letters
         starts / ends / contains   plain text the word starts with / ends with / contains
         pattern   ? = exactly one character, * = any run of characters, e.g. "ก?ร*" or "*ภาพ"
+        rhymes    a word or syllable to rhyme with: same vowel and final sound in the last syllable
+                  (รัก -> จัก หนัก ที่พัก). Words that simply end with the same text are left out.
         min_len / max_len   length in characters (0 = no limit)
         min_familiarity     drop words below this familiarity; COMMON (2.0) hides words the corpora rarely
                             or never use. That also hides some real but uncommon words (นวัตกรรม, นกกระทา).
@@ -99,11 +116,17 @@ class WordFinder:
             return []
         rx = _compile(pattern) if pattern.strip() else None
         skip = set(exclude)
+        rhymes = thai_only(rhymes)
+        sound = rhyme_key(rhymes) if rhymes else ""
+        if rhymes and not sound:
+            return []
 
         # start from the rarest required character instead of scanning every word
         idx = self._by_char()
         anchors = list(need) + list(contains[:1]) + list(starts[:1]) + list(ends[-1:])
-        if anchors:
+        if sound:
+            cands = iter(self._by_rhyme().get(sound, ()))
+        elif anchors:
             rare = min(anchors, key=lambda ch: len(idx.get(ch, ())))
             cands = (self.words[i] for i in idx.get(rare, ()))
         else:
@@ -116,6 +139,8 @@ class WordFinder:
                 continue
             if min_familiarity and self.fam[w] < min_familiarity:
                 continue
+            if sound and w.endswith(rhymes):
+                continue  # the same syllable again is not a rhyme
             if starts and not w.startswith(starts):
                 continue
             if ends and not w.endswith(ends):

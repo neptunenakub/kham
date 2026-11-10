@@ -23,6 +23,7 @@ def main(argv=None):
                "  kham กรน --only          words built only from ก, ร, น\n"
                "  kham --starts นัก --sort long\n"
                "  kham --pattern 'ก?ร*' --max 5\n"
+               "  kham --rhymes รัก         words that rhyme with รัก\n"
                "  kham รก --families       group results into word families",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -32,6 +33,7 @@ def main(argv=None):
     ap.add_argument("-e", "--ends", default="", help="ends with")
     ap.add_argument("-c", "--contains", default="", help="contains")
     ap.add_argument("-p", "--pattern", default="", help="? = one character, * = any run")
+    ap.add_argument("-r", "--rhymes", default="", help="words that rhyme with this word")
     ap.add_argument("--min", type=int, default=0, help="minimum length")
     ap.add_argument("--max", type=int, default=0, help="maximum length")
     ap.add_argument("--common", action="store_true", help="hide rare words")
@@ -50,9 +52,9 @@ def main(argv=None):
         return 0
 
     query = dict(letters="".join(a.letters), match=MATCH_MODES[1] if a.only else MATCH_MODES[0],
-                 starts=a.starts, ends=a.ends, contains=a.contains, pattern=a.pattern,
+                 starts=a.starts, ends=a.ends, contains=a.contains, pattern=a.pattern, rhymes=a.rhymes,
                  min_len=a.min, max_len=a.max, min_familiarity=COMMON if a.common else 0.0, sort=a.sort)
-    if not any((query["letters"], a.starts, a.ends, a.contains, a.pattern)):
+    if not any((query["letters"], a.starts, a.ends, a.contains, a.pattern, a.rhymes)):
         ap.print_help()
         return 2
 

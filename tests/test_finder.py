@@ -46,6 +46,25 @@ class FinderTest(unittest.TestCase):
         self.assertTrue(all(5 <= len(w) <= 8 for w in got))
         self.assertEqual([len(w) for w in got], sorted((len(w) for w in got), reverse=True))
 
+    def test_rhyme_keys(self):
+        cases = {"รัก": "a:k", "มาก": "aa:k", "เรียน": "ia:n", "ใจ": "a:y", "ภัย": "a:y", "เรา": "a:w",
+                 "เวลา": "aa:", "น้ำ": "a:m", "กรรม": "a:m", "สวน": "ua:n", "คน": "o:n", "นคร": "oor:n",
+                 "เธอ": "eer:", "เดิน": "eer:n", "เมือง": "uea:ng", "เป็น": "e:n", "แดง": "aae:ng",
+                 "จันทร์": "a:n", "สิทธิ์": "i:t", "ชาติ": "aa:t", "เพชร": "ee:t", "อารมณ์": "o:m",
+                 "คอมพิวเตอร์": "eer:", "นักเรียน": "ia:n", "โทสะ": "a:", "ออ": "oor:"}
+        for w, key in cases.items():
+            self.assertEqual(self.wf.rhyme_key(w), key, w)
+
+    def test_rhymes(self):
+        got = self.wf.search(rhymes="รัก")
+        for w in ("จัก", "หนัก", "ที่พัก"):
+            self.assertIn(w, got)
+        self.assertNotIn("รัก", got)
+        self.assertNotIn("ความรัก", got)   # same syllable, not a rhyme
+        self.assertNotIn("มาก", got)       # long vowel
+        self.assertTrue(all(self.wf.rhyme_key(w) == "a:k" for w in got))
+        self.assertTrue(all(w.startswith("น") for w in self.wf.search(rhymes="รัก", starts="น")))
+
     def test_min_familiarity(self):
         everything = self.wf.search(letters="กรน")
         common = self.wf.search(letters="กรน", min_familiarity=COMMON)

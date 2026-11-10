@@ -6,6 +6,7 @@
     GET /search?letters=กรน&limit=10
     GET /search?starts=นัก&sort=long
     GET /search?pattern=ก?ร*&max_len=5&common=1
+    GET /search?rhymes=รัก
     GET /families?letters=รก&limit=40
     GET /word?w=นักเรียน
 
@@ -38,11 +39,11 @@ def run_search(q: dict) -> list:
         raise ValueError(f"match must be one of {', '.join(MATCH_MODES)}")
     if sort not in SORTS:
         raise ValueError(f"sort must be one of {', '.join(SORTS)}")
-    if not any(q.get(k) for k in ("letters", "starts", "ends", "contains", "pattern")):
-        raise ValueError("give at least one of letters, starts, ends, contains, pattern")
+    if not any(q.get(k) for k in ("letters", "starts", "ends", "contains", "pattern", "rhymes")):
+        raise ValueError("give at least one of letters, starts, ends, contains, pattern, rhymes")
     return wf.search(
         letters=q.get("letters", ""), match=match, starts=q.get("starts", ""), ends=q.get("ends", ""),
-        contains=q.get("contains", ""), pattern=q.get("pattern", ""),
+        contains=q.get("contains", ""), pattern=q.get("pattern", ""), rhymes=q.get("rhymes", ""),
         min_len=num("min_len"), max_len=num("max_len"),
         min_familiarity=COMMON if q.get("common") == "1" else 0.0, sort=sort,
     )

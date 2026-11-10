@@ -1,234 +1,27 @@
-/* Kham — Thai word finder, browser version. Same lexicon and ranking as the Python package. */
+/* Kham web demo: the interface. The search engine itself is in kham.js. */
 "use strict";
 
-// ↓ Put your repository URL here after you push to GitHub.
 const REPO = "https://github.com/neptunenakub/kham";
+const PAGE = 150;         // words added per "show more"
+const FAMILY_CAP = 200;   // the family view groups this many top results
+const MODES = ["all", "only", "starts", "ends", "contains", "pattern", "rhymes"];
 
-const PAGE = 150;          // chips per "show more"
-const FAMILY_CAP = 200;
-const COMMON = 2;         // "hide rare words" keeps familiarity >= this (same as kham.COMMON in Python)   // the family view groups this many top results
-const CONS = "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ";
-const STOP = new Set(("ที่ ใน เป็น ให้ ได้ ว่า มี ของ และ กับ จะ ไป มา ก็ แต่ นี้ นั้น อยู่ แล้ว จาก ไม่ หรือ ถึง ซึ่ง โดย " +
-  "เพื่อ ต้อง ด้วย อย่าง ขึ้น เมื่อ เพราะ ยัง คือ อีก แห่ง จึง เขา เรา ฉัน").split(" "));
-const HEADS = new Set(("การ ความ นัก ผู้ คน น้ำ ข้าว รถ บ้าน ห้อง โรง ร้าน เครื่อง ลูก แม่ พ่อ หัว หน้า ตัว ใจ มือ ตา ปาก " +
-  "ไม้ ดอก ผัก ผล ปลา ไก่ หมู นก ช่าง ทาง สวน ตลาด งาน เงิน ทอง ไฟ ฟ้า ดิน หิน ลม ฝน ขนม ชา นม ไข่ " +
-  "เนื้อ ใบ ต้น ราก เสื้อ ชุด ชาว คำ เพลง หนัง สี เด็ก ครู หมอ วัน เวลา ยา น่า ขี้ เจ้า พระ นาย เรือ " +
-  "ทะเล ประตู หลัง ข้าง กลาง รอง ถุง กล่อง ขวด จาน โต๊ะ เหล็ก ทำ กิน เล่น เรียน รัก ขาย ซื้อ เดิน " +
-  "นอน ดู ฟัง พูด อ่าน เขียน ร้อง").split(" "));
-const PART_MIN = 5.5, PLAY_MIN = 6.0;
-
-const MODES = ["all", "only", "starts", "ends", "contains", "pattern"];
-
+const { load: loadLexicon, search, families, lexicon: L, CONSONANTS: CONS, COMMON } = Kham;
 const $ = (s) => document.querySelector(s);
-const isCons = (ch) => ch >= "ก" && ch <= "ฮ";
-const isThai = (ch) => ch >= "฀" && ch <= "๿";
-const thaiOnly = (s) => [...s].filter(isThai).join("");
-const collator = new Intl.Collator("th");
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fmt = (n) => n.toLocaleString("th-TH");
-
-/* ---------- lexicon ---------- */
-const L = { words: [], fam: new Map(), pieces: new Map(), common: new Set(), idx: new Map() };
-
-function loadLexicon(text) {
-  for (const line of text.split("\n")) {
-    if (!line) continue;
-    const [w, f, p, flags] = line.split("\t");
-    if (f && f !== "-") { L.fam.set(w, +f); L.words.push(w); }
-    if (p && p !== "-") L.pieces.set(w, +p);
-    if (flags && flags.includes("c")) L.common.add(w);
-  }
-  L.words.forEach((w, i) => {
-    for (const ch of new Set(w)) {
-      let a = L.idx.get(ch);
-      if (!a) L.idx.set(ch, (a = []));
-      a.push(i);
-    }
-  });
-}
-
-const score = (w) => (L.fam.get(w) || 0) - 0.07 * w.length;
-
-function countChars(s) {
-  const c = new Map();
-  for (const ch of s) c.set(ch, (c.get(ch) || 0) + 1);
-  return c;
-}
-
-function compilePattern(p) {
-  let src = "";
-  for (const ch of p.trim()) {
-    if ("?_.".includes(ch)) src += ".";
-    else if (ch === "*") src += ".*";
-    else if (ch.trim()) src += ch.replace(/[\\^$+.()|[\]{}]/g, "\\$&");
-  }
-  return new RegExp("^" + src + "$");
-}
-
-function search({ letters = "", match = "all", starts = "", ends = "", contains = "", pattern = "",
-                  minLen = 0, maxLen = 0, minFam = 0, sort = "familiar" }) {
-  [letters, starts, ends, contains] = [letters, starts, ends, contains].map(thaiOnly);
-  const need = match === "all" ? countChars(letters) : new Map();
-  const allowed = match === "only" ? new Set([...letters].filter(isCons)) : null;
-  if (allowed && !allowed.size) return [];
-  const rx = pattern.trim() ? compilePattern(pattern) : null;
-
-  const anchors = [...need.keys(), ...contains.slice(0, 1), ...starts.slice(0, 1), ...ends.slice(-1)];
-  let cands;
-  if (anchors.length) {
-    const rare = anchors.reduce((a, b) => ((L.idx.get(a) || []).length <= (L.idx.get(b) || []).length ? a : b));
-    cands = (L.idx.get(rare) || []).map((i) => L.words[i]);
-  } else cands = L.words;
-
-  const out = [];
-  outer: for (const w of cands) {
-    const n = w.length;
-    if ((minLen && n < minLen) || (maxLen && n > maxLen)) continue;
-    if (minFam && (L.fam.get(w) || 0) < minFam) continue;
-    if (starts && !w.startsWith(starts)) continue;
-    if (ends && !w.endsWith(ends)) continue;
-    if (contains && !w.includes(contains)) continue;
-    if (need.size) {
-      const have = countChars(w);
-      for (const [ch, k] of need) if ((have.get(ch) || 0) < k) continue outer;
-    }
-    if (allowed) for (const ch of w) if (isCons(ch) && !allowed.has(ch)) continue outer;
-    if (rx && !rx.test(w)) continue;
-    out.push(w);
-  }
-
-  const fam = (w) => L.fam.get(w) || 0;
-  const by = {
-    familiar: (a, b) => score(b) - score(a) || collator.compare(a, b),
-    long: (a, b) => b.length - a.length || fam(b) - fam(a) || collator.compare(a, b),
-    short: (a, b) => a.length - b.length || fam(b) - fam(a) || collator.compare(a, b),
-    az: (a, b) => collator.compare(a, b),
-  };
-  return out.sort(by[sort] || by.familiar);
-}
-
-/* ---------- word families (port of WordFinder.families) ---------- */
-function syllableCut(w, k) {
-  if (k <= 0 || k >= w.length) return false;
-  const nxt = w[k], prev = w[k - 1];
-  if (!((nxt >= "ก" && nxt <= "ฮ") || (nxt >= "เ" && nxt <= "ไ"))) return false;
-  if (prev >= "เ" && prev <= "ไ") return false;
-  if (("ีื".includes(prev) && "ยอ".includes(nxt)) || (prev === "ั" && nxt === "ว")) return false;
-  return !(k + 1 < w.length && w[k + 1] === "์");
-}
-
-const partsCache = new Map();
-function wordParts(w) {
-  let got = partsCache.get(w);
-  if (got) return got;
-  const known = (r) => L.fam.has(r) || L.pieces.has(r);
-  const startsWithWord = (r) => {
-    for (let j = r.length; j > 1; j--) if ((j === r.length || syllableCut(r, j)) && known(r.slice(0, j))) return true;
-    return false;
-  };
-  const front = [], back = [];
-  for (let k = 2; k < w.length - 1; k++) {
-    if (!syllableCut(w, k)) continue;
-    const a = w.slice(0, k), b = w.slice(k);
-    if ((L.pieces.get(a) || 0) >= PART_MIN && startsWithWord(b)) front.push(a);
-    if ((L.pieces.get(b) || 0) >= PART_MIN) back.push(b);
-  }
-  partsCache.set(w, (got = [front, back]));
-  return got;
-}
-
-function families(words, chain = 6) {
-  words = [...new Set(words)];
-  const pool = new Set(words), parts = new Map(), frontOf = new Map(), backOf = new Map();
-  const add = (m, k, v) => { let a = m.get(k); if (!a) m.set(k, (a = [])); a.push(v); };
-  for (const w of words) {
-    const [f, b] = wordParts(w);
-    const front = f.filter((p) => !STOP.has(p)), back = b.filter((p) => !STOP.has(p));
-    parts.set(w, [...front, ...back]);
-    front.forEach((p) => add(frontOf, p, w));
-    back.forEach((p) => add(backOf, p, w));
-  }
-  const fam = new Map(words.map((w) => [w, score(w)]));
-  const byFam = (ws) => [...ws].sort((a, b) => fam.get(b) - fam.get(a) || collator.compare(a, b));
-  const stems = [...new Set([...pool, ...frontOf.keys(), ...backOf.keys()])].sort(collator.compare);
-  const lists = new Map(stems.map((s) => [s, [pool.has(s) ? [s] : [], byFam(frontOf.get(s) || []), byFam(backOf.get(s) || [])]]));
-  const ptr = new Map(stems.map((s) => [s, [0, 0, 0]]));
-  const bonus = new Map(stems.map((s) => [s, 0.5 * Math.min(L.pieces.get(s) ?? L.fam.get(s) ?? 0, 9) + (HEADS.has(s) ? 1.5 : 0)]));
-  const used = new Set(), visits = new Map();
-
-  const heads = (s) => {
-    const out = [], l = lists.get(s), p = ptr.get(s);
-    for (let i = 0; i < 3; i++) {
-      while (p[i] < l[i].length && used.has(l[i][p[i]])) p[i]++;
-      if (p[i] < l[i].length) out.push(l[i][p[i]]);
-    }
-    return out;
-  };
-  const stemScore = (s) => {
-    const h = heads(s);
-    return h.length ? bonus.get(s) + Math.max(...h.map((w) => fam.get(w))) - 1.5 * (visits.get(s) || 0) : null;
-  };
-  const bestHead = (s) => {
-    const h = heads(s);
-    return h.length ? Math.max(...h.map((w) => fam.get(w))) : null;
-  };
-  const take = (s, k) => {
-    const got = [];
-    let base = null;
-    for (const lst of lists.get(s)) for (const w of lst) {
-      if (got.length === k) return got;
-      if (used.has(w)) continue;
-      if (base !== null && fam.get(w) < base - 3.5) return got;
-      if (w !== s && base === null) base = fam.get(w);
-      used.add(w);
-      got.push(w);
-    }
-    return got;
-  };
-
-  const groups = [];
-  let last = [], cur = null, plays = 0;
-  while (used.size < pool.size) {
-    let stem = null, kind = "new";
-    if (last.length && plays < 2) {
-      let best = null, bestSc = -Infinity;
-      for (const w of [...last].reverse()) for (const p of [...parts.get(w), w]) {
-        if (p === cur || STOP.has(p) || (bestHead(p) || 0) < PLAY_MIN) continue;
-        const sc = stemScore(p);
-        if (sc > bestSc) { best = p; bestSc = sc; }
-      }
-      if (best !== null) { stem = best; kind = "play"; }
-    }
-    if (stem === null) {
-      let bestSc = -Infinity;
-      for (const s of stems) {
-        const sc = stemScore(s);
-        if (sc !== null && sc > bestSc) { stem = s; bestSc = sc; }
-      }
-    }
-    if (stem === null) break;
-    const got = take(stem, kind === "play" ? Math.max(2, chain - 2) : chain);
-    visits.set(stem, (visits.get(stem) || 0) + 1);
-    plays = kind === "play" ? plays + 1 : 0;
-    groups.push({ stem, kind, words: got });
-    last = got; cur = stem;
-  }
-  const rest = words.filter((w) => !used.has(w));
-  if (rest.length) groups.push({ stem: "", kind: "new", words: rest });
-  return groups;
-}
-
+const fmt = (n) => n.toLocaleString("en-US");
 
 /* ---------- interface text, Thai and English ---------- */
 const TEXT = {
   th: {
-    h1: "หาคำไทยจากตัวอักษรที่มี",
-    sub: "พิมพ์ตัวอักษร แล้วดูว่าประกอบเป็นคำอะไรได้บ้าง จากคลัง {n} คำ",
+    sub: "หาคำไทยจากตัวอักษรที่มี หาคำสัมผัส หรือคำที่ขึ้นต้นและลงท้ายตามต้องการ",
+    uses: "สำหรับเล่นเกมต่อคำ แต่งกลอน เขียนเพลง และเรียนภาษาไทย · คลัง {n} คำ",
     eg: "เช่น {x}",
-    mode_all: "มีตัวอักษรครบ", mode_only: "ใช้แค่ตัวเหล่านี้", mode_starts: "ขึ้นต้นด้วย",
+    mode_all: "มีตัวอักษรครบ", mode_only: "ใช้แค่ตัวเหล่านี้", mode_rhymes: "สัมผัสกับ", mode_starts: "ขึ้นต้นด้วย",
     mode_ends: "ลงท้ายด้วย", mode_contains: "มีคำว่า", mode_pattern: "แพทเทิร์น",
     hint_all: "ลำดับไม่สำคัญ ถ้าพิมพ์ตัวซ้ำ คำนั้นต้องมีตัวนั้นซ้ำด้วย",
     hint_only: "พยัญชนะทุกตัวในคำต้องมาจากชุดนี้ สระและวรรณยุกต์ใช้ได้อิสระ",
+    hint_rhymes: "คำที่พยางค์สุดท้ายเสียงสระและตัวสะกดตรงกัน เช่น รัก กับ หนัก · อ่านจากตัวสะกด คำอ่านพิเศษบางคำอาจผิด",
     hint_starts: "คำที่ขึ้นต้นด้วยข้อความนี้",
     hint_ends: "คำที่ลงท้ายด้วยข้อความนี้",
     hint_contains: "คำที่มีข้อความนี้อยู่ตรงไหนก็ได้",
@@ -261,19 +54,22 @@ const TEXT = {
     how_2: "คะแนนมาจากความถี่ของคำในคลังข้อความไทยสองชุด (Thai National Corpus และ Thai Textbook Corpus) โดยให้น้ำหนักภาษาที่ใช้ทั่วไปมากกว่าภาษาข่าว คำอย่าง นักเรียน จึงมาก่อน ดำเนินการ",
     how_3_h: "ตระกูลคำ",
     how_3: "ระบบมองหาคำที่ซ่อนอยู่ในคำ เช่น การเรียน = การ + เรียน แล้วจัดเป็นกลุ่มตามหัวคำ และต่อไปยังกลุ่มถัดไปจากชิ้นที่เพิ่งเห็น เหมือนเวลาคนนึกคำต่อกัน",
+    how_4_h: "คำสัมผัส",
+    how_4: "อ่านตัวสะกดของพยางค์สุดท้ายด้วยกฎ แล้วสรุปเป็นเสียงสระกับตัวสะกด คำที่เสียงตรงกันถือว่าสัมผัสกัน เช่น ใจ ไป ภัย ไม่ได้ใช้พจนานุกรมคำอ่าน คำที่สะกดไม่ตรงเสียงบางคำจึงอาจผิด",
     dev_title: "สำหรับนักพัฒนา",
     dev_text: "มีไลบรารี Python ที่ไม่ต้องติดตั้งอะไรเพิ่ม ใช้คลังคำและวิธีจัดอันดับชุดเดียวกับหน้านี้",
     dev_cli: "หรือใช้จาก command line",
     foot: 'โอเพนซอร์ส สัญญาอนุญาต MIT · คลังคำจาก <a href="https://github.com/PyThaiNLP/pythainlp" target="_blank" rel="noopener">PyThaiNLP</a> (CC0)',
   },
   en: {
-    h1: "Find Thai words from the letters you have",
-    sub: "Type some letters and see which words they make, out of {n} words",
+    sub: "Find Thai words from the letters you have, words that rhyme, or words that start and end the way you need",
+    uses: "For word games, poems, song lyrics and learning Thai · {n} words",
     eg: "e.g. {x}",
-    mode_all: "Has all letters", mode_only: "Only these letters", mode_starts: "Starts with",
+    mode_all: "Has all letters", mode_only: "Only these letters", mode_rhymes: "Rhymes with", mode_starts: "Starts with",
     mode_ends: "Ends with", mode_contains: "Contains", mode_pattern: "Pattern",
     hint_all: "Order does not matter. A letter typed twice must appear twice in the word.",
     hint_only: "Every consonant in the word comes from this set. Vowels and tone marks are free.",
+    hint_rhymes: "Words whose last syllable has the same vowel and final sound, like รัก and หนัก. Read from the spelling, so some irregular words come out wrong.",
     hint_starts: "Words that start with this text.",
     hint_ends: "Words that end with this text.",
     hint_contains: "Words with this text anywhere inside.",
@@ -306,6 +102,8 @@ const TEXT = {
     how_2: "Scores come from how often a word appears in two Thai corpora (Thai National Corpus and Thai Textbook Corpus), weighted towards everyday language over news writing, so นักเรียน ranks above ดำเนินการ.",
     how_3_h: "Word families",
     how_3: "It looks for words hidden inside words, such as การเรียน = การ + เรียน, groups them under that stem, then moves to the next group from a piece it just showed, the way people chain words together.",
+    how_4_h: "Rhymes",
+    how_4: "Rules read the spelling of the last syllable and reduce it to a vowel and a final sound; words with the same sound rhyme, like ใจ ไป ภัย. There is no pronunciation dictionary, so some irregular spellings come out wrong.",
     dev_title: "For developers",
     dev_text: "There is a Python library with no dependencies. It uses the same word list and ranking as this page.",
     dev_cli: "Or from the command line",
@@ -313,8 +111,8 @@ const TEXT = {
   },
 };
 
-const EXAMPLE = { all: "ก ร น", only: "ก ร น ม", starts: "นัก", ends: "ภาพ", contains: "เรียน", pattern: "ก?ร*" };
-const TRIES = [["all", "ก ร น"], ["only", "ก ร น ม"], ["starts", "นัก"], ["ends", "ภาพ"], ["contains", "รัก"], ["pattern", "ก?ร*"]];
+const EXAMPLE = { all: "ก ร น", only: "ก ร น ม", rhymes: "รัก", starts: "นัก", ends: "ภาพ", contains: "เรียน", pattern: "ก?ร*" };
+const TRIES = [["all", "ก ร น"], ["rhymes", "รัก"], ["only", "ก ร น ม"], ["starts", "นัก"], ["ends", "ภาพ"], ["contains", "รัก"], ["pattern", "ก?ร*"]];
 const DICT_URL = "https://dict.longdo.com/search/";  // where "meaning" links go
 
 let lang = "th";
@@ -677,6 +475,3 @@ async function init() {
 }
 
 init();
-
-// the engine is open for anyone poking around in the console
-window.kham = { search, families, lexicon: L };
