@@ -4,180 +4,166 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kham · ค้นหาคำไทย</title>
-<meta name="description" content="ค้นหาคำไทยกว่า 60,000 คำ จากตัวอักษร คำขึ้นต้น ลงท้าย หรือแพทเทิร์น เรียงตามคำที่คนคุ้นเคย และจัดกลุ่มเป็นตระกูลคำ ทำงานในเบราว์เซอร์ทั้งหมด">
+<meta name="description" content="หาคำไทยจากตัวอักษรที่มี คลังคำกว่า 60,000 คำ เรียงจากคำที่คนคุ้นก่อน ค้นแบบขึ้นต้น ลงท้าย หรือแพทเทิร์นก็ได้ · Thai word finder">
 <meta property="og:title" content="Kham · ค้นหาคำไทย">
-<meta property="og:description" content="Thai word finder: 60,000+ words, ranked by how familiar they are, grouped into word families. Open source.">
-<meta name="theme-color" content="#f6f2ea">
+<meta property="og:description" content="Thai word finder: 60,000+ words, ranked by how familiar they are. Open source.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://neptunenakub.github.io/kham/">
+<meta property="og:image" content="https://neptunenakub.github.io/kham/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600&family=Noto+Sans+Thai+Looped:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="preload" href="lexicon.tsv" as="fetch" crossorigin>
 </head>
 <body>
-<header class="top">
-  <div class="wrap top-row">
-    <a class="brand" href="#" aria-label="Kham หน้าแรก">
-      <span class="brand-tile" aria-hidden="true">ค</span>
-      <span class="brand-name">Kham<span class="brand-th">คำ</span></span>
-    </a>
-    <nav class="top-nav">
-      <a href="#how">ทำงานยังไง</a>
-      <a href="#code">ใช้ในโค้ด</a>
-      <a class="repo-link" href="#" target="_blank" rel="noopener">GitHub</a>
-      <button class="icon-btn" id="theme" type="button" aria-label="สลับธีมสว่าง/มืด" title="สลับธีม">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path class="sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path class="moon" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 3.6 9 14 14 0 0 1-3.6 9 14 14 0 0 1-3.6-9A14 14 0 0 1 12 3Z"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M7 8v3M12 8v4M17 8v3"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8.5V19l-4-2v-3.5L3 5Z"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9.5h.01M10 9.5h.01M14 9.5h.01M18 9.5h.01M6 13h.01M18 13h.01M9 16h6"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4a4 4 0 0 0 3.3-1.7l6.6-8.6A4 4 0 0 1 16.6 6H22M18 2l4 4-4 4M2 6h1.9a4 4 0 0 1 3.3 1.8M22 18h-5.4a4 4 0 0 1-3.3-1.7l-.5-.7M18 14l4 4-4 4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-turn" viewBox="0 0 24 24"><path d="M5 5v6a3 3 0 0 0 3 3h11M15 10l4 4-4 4"/></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><path fill="currentColor" stroke="none" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="wrap bar-row">
+    <a class="brand" href="./"><span class="brand-th">คำ</span><span class="brand-en">Kham</span></a>
+    <div class="tools">
+      <div class="lang" role="group" aria-label="ภาษา" data-i18n-aria="a_lang">
+        <svg class="i" aria-hidden="true"><use href="#i-globe"/></svg>
+        <button type="button" data-lang="th" aria-pressed="true">ไทย</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button class="icon-btn" id="theme" type="button" aria-label="เปลี่ยนเป็นโหมดมืด">
+        <svg class="i sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        <svg class="i moon" aria-hidden="true"><use href="#i-moon"/></svg>
       </button>
-    </nav>
+      <a class="icon-btn repo-link" href="#" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+        <svg class="i" aria-hidden="true"><use href="#i-github"/></svg>
+      </a>
+    </div>
   </div>
 </header>
 
-<main>
-  <section class="hero wrap">
-    <div class="hero-text">
-      <p class="eyebrow">Open-source Thai word finder</p>
-      <h1><span class="nw">หาคำไทย</span><br><em class="nw">จากตัวอักษร</em> <span class="nw">ในพริบตา</span></h1>
-      <p class="lede">พิมพ์ตัวอักษรที่มี แล้วได้คำที่ใช้ได้ทันที เรียงจากคำที่คนนึกถึงก่อน และจัดกลุ่มเป็นตระกูลคำแบบที่คนคิดจริง ๆ ใช้เล่นเกมทายคำ แต่งกลอน ทำบอท หรือใส่ในแอปของคุณเองก็ได้</p>
-      <ul class="stats" aria-label="สถิติ">
-        <li><strong id="stat-words">60,000+</strong><span>คำในคลัง</span></li>
-        <li><strong>100%</strong><span>รันในเบราว์เซอร์</span></li>
-        <li><strong>0</strong><span>dependency</span></li>
-      </ul>
+<main class="wrap">
+  <h1 data-i18n="h1">หาคำไทยจากตัวอักษรที่มี</h1>
+  <p class="sub" data-i18n="sub">พิมพ์ตัวอักษร แล้วดูว่าประกอบเป็นคำอะไรได้บ้าง จากคลัง 60,000+ คำ</p>
+
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+    <label class="sr-only" for="q" data-i18n="a_search">คำค้นหา</label>
+    <input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="th" placeholder="เช่น ก ร น">
+    <kbd id="slash" aria-hidden="true">/</kbd>
+    <button class="icon-btn sm" id="clear" type="button" aria-label="ล้างคำค้น" data-i18n-aria="a_clear" hidden>
+      <svg class="i" aria-hidden="true"><use href="#i-x"/></svg>
+    </button>
+  </div>
+
+  <div class="modes" role="tablist" aria-label="วิธีค้นหา" data-i18n-aria="a_modes">
+    <button role="tab" data-mode="all" aria-selected="true" data-i18n="mode_all">มีตัวอักษรครบ</button>
+    <button role="tab" data-mode="only" aria-selected="false" data-i18n="mode_only">ใช้แค่ตัวเหล่านี้</button>
+    <button role="tab" data-mode="starts" aria-selected="false" data-i18n="mode_starts">ขึ้นต้นด้วย</button>
+    <button role="tab" data-mode="ends" aria-selected="false" data-i18n="mode_ends">ลงท้ายด้วย</button>
+    <button role="tab" data-mode="contains" aria-selected="false" data-i18n="mode_contains">มีคำว่า</button>
+    <button role="tab" data-mode="pattern" aria-selected="false" data-i18n="mode_pattern">แพทเทิร์น</button>
+  </div>
+  <p class="hint" id="hint"></p>
+
+  <div class="filters">
+    <div class="f">
+      <svg class="i" aria-hidden="true"><use href="#i-ruler"/></svg>
+      <span data-i18n="len">ความยาว</span>
+      <input id="min" type="number" min="1" max="30" inputmode="numeric" placeholder="ต่ำสุด" data-i18n-ph="min" aria-label="ความยาวต่ำสุด" data-i18n-aria="a_min">
+      <span aria-hidden="true">–</span>
+      <input id="max" type="number" min="1" max="30" inputmode="numeric" placeholder="สูงสุด" data-i18n-ph="max" aria-label="ความยาวสูงสุด" data-i18n-aria="a_max">
     </div>
-    <div class="hero-art" aria-hidden="true">
-      <div class="tile t1">ก</div>
-      <div class="tile t2">ร</div>
-      <div class="tile t3">น</div>
-      <div class="hero-words">
-        <span>นักเรียน</span><span>การบ้าน</span><span>จักรยาน</span><span>สงกรานต์</span><span>นักร้อง</span><span>กระดาน</span>
-      </div>
+    <label class="f">
+      <svg class="i" aria-hidden="true"><use href="#i-sort"/></svg>
+      <span class="sr-only" data-i18n="sort">เรียง</span>
+      <select id="sort">
+        <option value="familiar" data-i18n="sort_familiar">คุ้นเคยก่อน</option>
+        <option value="long" data-i18n="sort_long">ยาวก่อน</option>
+        <option value="short" data-i18n="sort_short">สั้นก่อน</option>
+        <option value="az" data-i18n="sort_az">ก–ฮ</option>
+      </select>
+    </label>
+    <div class="seg" role="group" aria-label="มุมมอง" data-i18n-aria="a_view">
+      <button type="button" data-view="list" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg><span data-i18n="view_list">รายการ</span></button>
+      <button type="button" data-view="families" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-tree"/></svg><span data-i18n="view_families">ตระกูลคำ</span></button>
     </div>
+    <button class="f toggle" id="common" type="button" aria-pressed="false" data-i18n-title="common_tip">
+      <svg class="i" aria-hidden="true"><use href="#i-filter"/></svg><span data-i18n="common">ซ่อนคำหายาก</span>
+    </button>
+    <button class="f toggle" id="kbd-toggle" type="button" aria-expanded="false" aria-controls="kbd">
+      <svg class="i" aria-hidden="true"><use href="#i-keyboard"/></svg><span data-i18n="kbd">แป้นพยัญชนะ</span>
+    </button>
+  </div>
+  <div class="kbd-grid" id="kbd" hidden></div>
+
+  <div class="meta">
+    <p id="count" aria-live="polite">กำลังโหลดคลังคำ…</p>
+    <div class="acts">
+      <button class="ghost" id="random" type="button"><svg class="i" aria-hidden="true"><use href="#i-shuffle"/></svg><span data-i18n="random">สุ่มคำ</span></button>
+      <button class="ghost" id="copy-all" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-copy"/></svg><span data-i18n="copy_all">คัดลอกทั้งหมด</span></button>
+      <button class="ghost" id="share" type="button"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg><span data-i18n="share">คัดลอกลิงก์</span></button>
+    </div>
+  </div>
+  <div id="results" class="results"></div>
+  <div class="more-row"><button class="btn" id="more" type="button" hidden></button></div>
+  <p class="legend" id="legend" data-i18n="legend" hidden>สีจาง = คำที่พบไม่บ่อย · แตะคำเพื่อคัดลอกและดูความหมาย</p>
+
+  <section class="about" id="how">
+    <h2 data-i18n="how_title">วิธีทำงาน</h2>
+    <dl class="rows">
+      <div><dt data-i18n="how_1_h">ค้นเร็ว</dt><dd data-i18n="how_1"></dd></div>
+      <div><dt data-i18n="how_2_h">เรียงตามความคุ้น</dt><dd data-i18n="how_2"></dd></div>
+      <div><dt data-i18n="how_3_h">ตระกูลคำ</dt><dd data-i18n="how_3"></dd></div>
+    </dl>
   </section>
 
-  <section class="finder wrap" aria-label="ค้นหาคำ">
-    <div class="panel">
-      <div class="modes" role="tablist" aria-label="วิธีค้นหา">
-        <button role="tab" data-mode="all" aria-selected="true">มีตัวอักษรครบ</button>
-        <button role="tab" data-mode="only" aria-selected="false">ใช้แค่ตัวเหล่านี้</button>
-        <button role="tab" data-mode="starts" aria-selected="false">ขึ้นต้นด้วย</button>
-        <button role="tab" data-mode="ends" aria-selected="false">ลงท้ายด้วย</button>
-        <button role="tab" data-mode="contains" aria-selected="false">มีคำว่า</button>
-        <button role="tab" data-mode="pattern" aria-selected="false">แพทเทิร์น</button>
-      </div>
-
-      <div class="search-row">
-        <label class="sr-only" for="q">คำค้นหา</label>
-        <input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="th" placeholder="ก ร น">
-        <button class="clear" id="clear" type="button" aria-label="ล้างคำค้น" hidden>×</button>
-      </div>
-      <p class="hint" id="hint">พิมพ์ตัวอักษรไทยกี่ตัวก็ได้ ลำดับไม่สำคัญ ตัวซ้ำต้องมีซ้ำในคำด้วย</p>
-      <div class="tiles" id="tiles" aria-hidden="true"></div>
-
-      <details class="kbd" id="kbd-wrap">
-        <summary>แป้นพยัญชนะ</summary>
-        <div class="kbd-grid" id="kbd"></div>
-      </details>
-
-      <div class="options">
-        <label class="opt">
-          <span>ความยาว</span>
-          <span class="range">
-            <input id="min" type="number" min="1" max="30" inputmode="numeric" placeholder="ต่ำสุด" aria-label="ความยาวต่ำสุด">
-            <span aria-hidden="true">–</span>
-            <input id="max" type="number" min="1" max="30" inputmode="numeric" placeholder="สูงสุด" aria-label="ความยาวสูงสุด">
-          </span>
-        </label>
-        <label class="opt">
-          <span>เรียงตาม</span>
-          <select id="sort">
-            <option value="familiar">คนคุ้นเคยก่อน</option>
-            <option value="long">ยาวที่สุดก่อน</option>
-            <option value="short">สั้นที่สุดก่อน</option>
-            <option value="az">ก–ฮ</option>
-          </select>
-        </label>
-        <div class="opt">
-          <span>มุมมอง</span>
-          <div class="seg" role="group" aria-label="มุมมองผลลัพธ์">
-            <button type="button" data-view="list" aria-pressed="true">รายการ</button>
-            <button type="button" data-view="families" aria-pressed="false">ตระกูลคำ</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="meta">
-      <div class="meta-left">
-        <p id="count" aria-live="polite">กำลังโหลดคลังคำ…</p>
-        <p class="legend"><span class="meter" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span> ความคุ้นเคย <span class="sw" aria-hidden="true"></span> คำใช้บ่อยที่คัดไว้ · คลิกคำเพื่อคัดลอก</p>
-      </div>
-      <div class="meta-actions">
-        <button class="ghost" id="share" type="button">คัดลอกลิงก์</button>
-        <button class="ghost" id="random" type="button">สุ่มคำ</button>
-      </div>
-    </div>
-
-    <div id="results" class="results"></div>
-    <div class="more-row"><button class="primary" id="more" type="button" hidden>แสดงเพิ่ม</button></div>
-  </section>
-
-  <section class="how wrap" id="how">
-    <h2>ทำงานยังไง</h2>
-    <div class="how-grid">
-      <article>
-        <span class="num">01</span>
-        <h3>ค้นจากตัวที่หายากที่สุด</h3>
-        <p>คลังคำถูกทำ index ตามตัวอักษร เวลาค้นจะเริ่มจากตัวอักษรที่มีคำน้อยที่สุด แทนที่จะไล่ทั้ง 60,000 คำ เลยตอบได้ในไม่กี่มิลลิวินาที</p>
-      </article>
-      <article>
-        <span class="num">02</span>
-        <h3>เรียงตามที่คนนึกถึงก่อน</h3>
-        <p>ให้คะแนนความคุ้นเคยจากความถี่ใน Thai National Corpus และ Thai Textbook Corpus ถ่วงน้ำหนักให้ภาษาชีวิตประจำวันมากกว่าภาษาข่าว คำประสมอย่าง "การบ้าน" ได้คะแนนจากส่วนประกอบด้วย</p>
-      </article>
-      <article>
-        <span class="num">03</span>
-        <h3>จัดตระกูลคำแบบคน</h3>
-        <p>หาคำที่ซ่อนอยู่ในคำ (การ + เรียน) แล้วต่อเป็นสาย การ → การบ้าน การงาน จากนั้นเล่นคำต่อจากชิ้นที่เพิ่งเห็น การเรียน → เรียน → นักเรียน</p>
-      </article>
-    </div>
-  </section>
-
-  <section class="code wrap" id="code">
-    <div class="code-head">
-      <h2>ใช้ในโค้ดของคุณ</h2>
-      <p>Python ล้วน ไม่มี dependency · ใช้ใน bot, เกม หรือ API ได้เลย</p>
-    </div>
-    <div class="code-tabs" role="tablist" aria-label="ตัวอย่างโค้ด">
-      <button role="tab" data-code="py" aria-selected="true">Python</button>
-      <button role="tab" data-code="cli" aria-selected="false">Command line</button>
-    </div>
-<pre class="code-block" data-code="py"><code><span class="c"># pip install git+<span class="repo-text">https://github.com/neptunenakub/kham</span></span>
-<span class="k">from</span> kham <span class="k">import</span> WordFinder
+  <section class="about" id="code">
+    <h2 data-i18n="dev_title">สำหรับนักพัฒนา</h2>
+    <p data-i18n="dev_text"></p>
+<pre><code><span class="c"># pip install git+<span class="repo-text">https://github.com/neptunenakub/kham</span></span>
+from kham import WordFinder
 
 wf = WordFinder()
-wf.search(letters=<span class="s">"กรน"</span>, limit=<span class="n">5</span>)
+wf.search(letters="กรน", limit=5)
 <span class="c"># ['นักเรียน', 'นักร้อง', 'การบ้าน', 'การงาน', 'งานการ']</span>
 
-wf.search(starts=<span class="s">"นัก"</span>, sort=<span class="s">"long"</span>, limit=<span class="n">3</span>)
-<span class="c"># ['นักสังคมสงเคราะห์', 'นักประชาสัมพันธ์', 'นักประวัติศาสตร์']</span>
-
-wf.search(pattern=<span class="s">"ก?ร"</span>)        <span class="c"># ? = 1 ตัว, * = กี่ตัวก็ได้</span>
-wf.families(wf.search(letters=<span class="s">"รก"</span>, limit=<span class="n">50</span>))</code></pre>
-<pre class="code-block" data-code="cli" hidden><code><span class="c"># หลัง pip install จะมีคำสั่ง kham (หรือใช้ python -m kham)</span>
-kham กรน                     <span class="c"># คำที่มี ก ร น</span>
-kham กรน --only              <span class="c"># คำที่ใช้แค่ ก ร น</span>
+wf.search(starts="นัก", sort="long", limit=3)
+wf.search(pattern="ก?ร")        <span class="c"># ? = one character, * = any run</span>
+wf.families(wf.search(letters="รก", limit=50))</code></pre>
+    <p data-i18n="dev_cli"></p>
+<pre><code>kham กรน                     <span class="c"># words with ก, ร and น</span>
 kham --starts นัก --sort long
-kham --pattern <span class="s">"ก?ร*"</span> --max <span class="n">5</span>
+kham --pattern "ก?ร*" --max 5
 kham รก --families --json</code></pre>
-    <button class="ghost copy-code" id="copy-code" type="button">คัดลอกโค้ด</button>
   </section>
 </main>
 
 <footer class="foot">
   <div class="wrap foot-row">
-    <p>Kham · MIT License · คลังคำและความถี่จาก <a href="https://github.com/PyThaiNLP/pythainlp" target="_blank" rel="noopener">PyThaiNLP</a> (CC0)</p>
-    <a class="repo-link" href="#" target="_blank" rel="noopener">ดูโค้ดบน GitHub →</a>
+    <p data-i18n-html="foot"></p>
+    <p><a class="repo-link" href="#" target="_blank" rel="noopener">neptunenakub/kham</a></p>
   </div>
 </footer>
 
