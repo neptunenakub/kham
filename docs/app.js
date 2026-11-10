@@ -2,7 +2,7 @@
 "use strict";
 
 // ↓ Put your repository URL here after you push to GitHub.
-const REPO = "https://github.com/your-username/kham";
+const REPO = "https://github.com/neptunenakub/kham";
 
 const PAGE = 150;          // chips per "show more"
 const FAMILY_CAP = 200;   // the family view groups this many top results

@@ -7,7 +7,7 @@ Search 60,000+ Thai words by letters, prefix, suffix, substring or pattern. Resu
 
 **ค้นหาคำไทยจากตัวอักษร** · เรียงจากคำที่คนนึกถึงก่อน · จัดกลุ่มเป็นตระกูลคำ · ใช้ได้ทั้งเว็บ, Python และ command line
 
-[**Live demo**](https://your-username.github.io/kham/) · [Python](#python) · [Command line](#command-line) · [How it works](#how-it-works)
+[**Live demo**](https://neptunenakub.github.io/kham/) · [Python](#python) · [Command line](#command-line) · [How it works](#how-it-works)
 
 ![Kham web demo](docs/screenshot.webp)
 
@@ -28,12 +28,12 @@ Good for word games, chat bots, crossword or poem helpers, autocomplete, and tea
 
 Kham คือตัวหาคำไทยแบบโอเพนซอร์ส พิมพ์ตัวอักษรที่มี (เช่น `ก ร น`) แล้วได้คำที่มีตัวอักษรครบ เช่น นักเรียน การบ้าน จักรยาน
 นอกจากนี้ยังค้นแบบ "ใช้แค่ตัวเหล่านี้", ขึ้นต้น, ลงท้าย, มีคำว่า และแพทเทิร์นได้ ผลลัพธ์เรียงตามคำที่คนคุ้นเคย (คำนวณจากคลังข้อความภาษาไทย) และจัดกลุ่มเป็นตระกูลคำได้
-ใช้ได้ 3 แบบ: [เว็บ](https://your-username.github.io/kham/), ไลบรารี Python และคำสั่งใน terminal ไม่ต้องติดตั้งอะไรเพิ่ม
+ใช้ได้ 3 แบบ: [เว็บ](https://neptunenakub.github.io/kham/), ไลบรารี Python และคำสั่งใน terminal ไม่ต้องติดตั้งอะไรเพิ่ม
 
 ## Python
 
 ```bash
-pip install git+https://github.com/your-username/kham
+pip install git+https://github.com/neptunenakub/kham
 ```
 
 ```python
@@ -93,7 +93,7 @@ python -m http.server 8000 --directory docs
 
 Then open http://localhost:8000. (Opening `index.html` directly does not work, because browsers block `fetch` on `file://`.)
 
-**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / `/docs`. Then set your repository URL in the `REPO` constant at the top of [`docs/app.js`](docs/app.js), and replace `your-username` in this README.
+**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / `/docs`. Then set your repository URL in the `REPO` constant at the top of [`docs/app.js`](docs/app.js), and replace `neptunenakub` in this README.
 
 The search engine is exposed in the browser console as `window.kham.search(...)` and `window.kham.families(...)`.
 
