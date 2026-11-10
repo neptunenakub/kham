@@ -2,6 +2,11 @@
 
 # Kham · คำ
 
+[![tests](https://github.com/neptunenakub/kham/actions/workflows/test.yml/badge.svg)](https://github.com/neptunenakub/kham/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
+
 **Fast, dependency-free Thai word finder.**
 Search 60,000+ Thai words by letters, prefix, suffix, substring or pattern. Results are ranked by how familiar a word is to people, and can be grouped into word families the way a person would think of them.
 
