@@ -27,6 +27,8 @@ from kham.thai import HEADS, PART_MIN, STOP, plain_word, word_parts  # noqa: E40
 RAW = os.path.join(ROOT, "data", "raw")
 OUT = os.path.join(ROOT, "kham", "data", "lexicon.tsv")
 WEB = os.path.join(ROOT, "docs", "lexicon.tsv")
+COMPOUND_PULL = 0.5
+EVERYDAY_FLOOR, LOAN_FLOOR = 5.0, 3.0
 
 
 def lines(name):
@@ -51,6 +53,7 @@ def main():
     famd = {w: 0.75 * math.log1p(23 * ttc.get(w, 0)) + 0.25 * math.log1p(tnc.get(w, 0))
             for w in set(tnc) | set(ttc)}
 
+    everyday = {w for w in lines("common_th.txt") if plain_word(w)}
     curated = [w for w in lines("common_th.txt") + lines("loanwords.txt") if plain_word(w)]
     curated_set = set(curated)
     words = set(curated) | {w for w in lines("words_th.txt") if plain_word(w)}
@@ -59,14 +62,20 @@ def main():
         best = famd.get(w, 0.0)
         if best > 0:
             # Real text often splits compounds (การบ้าน shows up far less than การ and บ้าน), so a compound
-            # on a common head that does appear is judged by its weaker piece.
+            # on a common head is pulled halfway towards its weaker piece. Only halfway: the pieces being
+            # common says little about the compound itself (น้ำ + เคย are both common, น้ำเคย is not).
+            own = best
             for p in word_parts(w, famd, famd)[0]:
                 rest = w[len(p):]
                 if p in HEADS and rest not in STOP and rest in famd:
-                    best = max(best, min(famd[p], famd[rest]) - 2.0)
+                    best = max(best, own + COMPOUND_PULL * (min(famd[p], famd[rest]) - 2.0 - own))
         if w in STOP:
             best -= 4.0  # ก็ / กับ are words, but nobody leads with them in a word game
-        return best + (1.5 if w in curated_set else 0.0)
+        if w in curated_set:
+            # Hand-picked means a person knows the word even when the corpora never show it
+            # (they split ร้านอาหาร into ร้าน + อาหาร, and predate มือถือ).
+            best = max(best, EVERYDAY_FLOOR if w in everyday else LOAN_FLOOR) + 1.5
+        return best
 
     pieces = {w: s for w, s in famd.items() if s >= PART_MIN and plain_word(w)}
     rows = []
