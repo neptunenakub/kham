@@ -93,7 +93,7 @@ python -m http.server 8000 --directory docs
 
 Then open http://localhost:8000. (Opening `index.html` directly does not work, because browsers block `fetch` on `file://`.)
 
-**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / `/docs`. Then set your repository URL in the `REPO` constant at the top of [`docs/app.js`](docs/app.js), and replace `neptunenakub` in this README.
+**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / `/docs`. If you fork this project, change the `REPO` constant at the top of [`docs/app.js`](docs/app.js) to your own repository URL.
 
 The search engine is exposed in the browser console as `window.kham.search(...)` and `window.kham.families(...)`.
 
