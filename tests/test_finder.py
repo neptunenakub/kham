@@ -51,7 +51,8 @@ class FinderTest(unittest.TestCase):
                  "เวลา": "aa:", "น้ำ": "a:m", "กรรม": "a:m", "สวน": "ua:n", "คน": "o:n", "นคร": "oor:n",
                  "เธอ": "eer:", "เดิน": "eer:n", "เมือง": "uea:ng", "เป็น": "e:n", "แดง": "aae:ng",
                  "จันทร์": "a:n", "สิทธิ์": "i:t", "ชาติ": "aa:t", "เพชร": "ee:t", "อารมณ์": "o:m",
-                 "คอมพิวเตอร์": "eer:", "นักเรียน": "ia:n", "โทสะ": "a:", "ออ": "oor:"}
+                 "คอมพิวเตอร์": "eer:", "นักเรียน": "ia:n", "โทสะ": "a:", "ออ": "oor:",
+                 "เอง": "ee:ng", "เอว": "ee:w", "เอย": "eer:y", "โอน": "oo:n", "แอบ": "aae:p", "ตัวเอง": "ee:ng"}
         for w, key in cases.items():
             self.assertEqual(self.wf.rhyme_key(w), key, w)
 

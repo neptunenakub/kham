@@ -48,9 +48,9 @@ _FIXES = [
 
 
 def _is_cluster(a: str, b: str) -> bool:
-    """Can a + b start a syllable together (กร ปล ขว หน อย ...)?"""
+    """Can a + b start a syllable together (กร ปล ขว หน ...)? อย is left out: it never follows เ แ โ."""
     return ((a in "กขคตปผพบดฟทสศ" and b in "รล") or (a in "กขค" and b == "ว")
-            or (a == "ห" and b in "งญนมยรลว") or (a == "อ" and b == "ย"))
+            or (a == "ห" and b in "งญนมยรลว"))
 
 
 def rhyme_key(word: str) -> str:
@@ -133,7 +133,7 @@ def rhyme_key(word: str) -> str:
         return "ia:" + f                                           # เรียน เขียว
     if last == "อ" and prev != "ื":
         return "eer:" if lead(n - 1) == "เ" else "oor:"            # เธอ / พ่อ ออ
-    if prev == "อ":
+    if prev == "อ" and prev2 not in LEAD:                         # เอง โอน แอบ: there อ is the initial
         if prev2 == "ื":
             return ("uea:" if lead(n - 3) == "เ" else "uue:") + f  # เดือน
         if prev2 == "็":

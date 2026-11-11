@@ -264,7 +264,7 @@ const RHYME_FIXES = [
 
 function isCluster(a, b) {
   return ("กขคตปผพบดฟทสศ".includes(a) && "รล".includes(b)) || ("กขค".includes(a) && b === "ว") ||
-    (a === "ห" && "งญนมยรลว".includes(b)) || (a === "อ" && b === "ย");
+    (a === "ห" && "งญนมยรลว".includes(b));
 }
 
 /** The rhyming sound of a word's last syllable as "vowel:final" (รัก -> "a:k"), or "" if unreadable. */
@@ -323,7 +323,7 @@ function rhymeKey(word) {
   }
   if (prev === "ย" && prev2 === "ี" && lead(n - 3) === "เ") return "ia:" + f;
   if (last === "อ" && prev !== "ื") return lead(n - 1) === "เ" ? "eer:" : "oor:";
-  if (prev === "อ") {
+  if (prev === "อ" && !LV(prev2)) {  // เอง โอน แอบ: there อ is the initial
     if (prev2 === "ื") return (lead(n - 3) === "เ" ? "uea:" : "uue:") + f;
     if (prev2 === "็") return "or:" + f;
     if (C(prev2)) return (lead(n - 2) === "เ" ? "eer:" : "oor:") + f;
