@@ -15,10 +15,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Lexicon is up to date
+      - name: Lexicon and word pages are up to date
         run: |
           python scripts/build_lexicon.py
-          git diff --exit-code -- kham/data/lexicon.tsv docs/lexicon.tsv
+          python scripts/build_pages.py
+          git diff --exit-code -- kham/data/lexicon.tsv docs/
+          test -z "$(git status --porcelain -- docs/)"
       - name: Unit tests
         run: python -m unittest discover -s tests -t . -v
       - name: CLI smoke test

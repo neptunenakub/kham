@@ -212,3 +212,22 @@ pre .c { color: var(--faint); }
 .toast a { display: flex; align-items: center; gap: 3px; text-underline-offset: 3px; }
 .toast .i { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: reduce) { .toast, .search { transition: none; } }
+
+/* ---------- static word pages (built by scripts/build_pages.py) ---------- */
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; font-size: 14px; color: var(--muted); }
+.crumbs a { text-underline-offset: 3px; }
+.static { padding-top: 20px; }
+.static h1 { margin: 10px 0 0; font: 600 clamp(26px, 5vw, 36px)/1.3 var(--ui); }
+.static h2 { margin: 36px 0 10px; font: 600 18px/1.4 var(--ui); }
+.static .sub { max-width: 42em; color: var(--muted); font-size: 16px; }
+.static .sub b { color: var(--fg); font-weight: 500; }
+.cta { display: inline-block; margin-top: 6px; text-decoration: none; }
+.wordlist { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(8.6rem, 1fr)); gap: 0 14px; margin: 0; padding: 0; }
+.wordlist li { padding: 4px 0; font: 400 18px/1.7 var(--word); overflow-wrap: anywhere; }
+@media (max-width: 480px) { .wordlist { grid-template-columns: repeat(2, 1fr); } }
+.links { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.links a { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; text-decoration: none; font: 400 17px/1.6 var(--word); }
+.links a:hover { border-color: var(--fg); }
+.links small { margin-left: 4px; font: 13px var(--ui); color: var(--muted); }
+.links.letters a { min-width: 42px; text-align: center; }
+.static .note { margin-top: 28px; }

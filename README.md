@@ -119,6 +119,10 @@ Then open http://localhost:8000. (Opening `index.html` directly does not work, b
 
 The engine is one file with no dependencies, [`docs/kham.js`](docs/kham.js). It works in a browser (`Kham.load(text)`, `Kham.search({ letters: "กรน" })`, `Kham.families(words)`, `Kham.rhymeKey("รัก")`) and in Node (`require("./docs/kham.js")`).
 
+### Word pages for search engines
+
+The search tool fills in its results with JavaScript, so a crawler sees an empty page. `scripts/build_pages.py` therefore writes about 225 plain HTML pages from the same lexicon: [words that rhyme](https://neptunenakub.github.io/kham/rhyme/%E0%B8%A3%E0%B8%B1%E0%B8%81.html) (one page per rhyme sound), words that start with each consonant, and words that contain each consonant, plus a [hub page](https://neptunenakub.github.io/kham/words/) and `sitemap.xml`. A short list of offensive words is left off these pages; they stay in the lexicon and the search tool.
+
 ## How it works
 
 1. **Index by letter.** Every character maps to the words that contain it. A query starts from its rarest required letter, so `ฌ` scans a handful of words instead of 60,000.
@@ -135,6 +139,7 @@ kham/data/lexicon.tsv the built word list the package and the web demo both use
 docs/                 web demo (index.html, style.css, app.js) and kham.js, the engine for browsers and Node
 data/raw/             source word lists
 scripts/build_lexicon.py  rebuilds lexicon.tsv from data/raw
+scripts/build_pages.py    rebuilds the static word pages (docs/rhyme, docs/starts, docs/has, docs/words)
 examples/             JSON API server and Discord bot
 tests/                unit tests, and a check that kham.js and the Python package agree
 ```
@@ -143,6 +148,7 @@ Rebuild the word list after editing anything in `data/raw/`:
 
 ```bash
 python scripts/build_lexicon.py
+python scripts/build_pages.py
 python -m unittest discover -s tests -t .
 ```
 
